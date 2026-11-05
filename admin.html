@@ -323,6 +323,72 @@
   .focus-strip .fs-actions{display:flex;gap:.5rem;flex-wrap:wrap}
   .focus-strip .fs-actions button,.focus-strip .fs-actions a{font-size:.68rem;font-weight:700;padding:.46rem .82rem;border-radius:100px;border:1px solid rgba(61,130,232,.28);background:rgba(61,130,232,.08);color:var(--blue-d);cursor:pointer;text-decoration:none;transition:.2s}
   .focus-strip .fs-actions button:hover,.focus-strip .fs-actions a:hover{background:rgba(61,130,232,.18);transform:translateY(-1px)}
+
+  /* ══════════ V9 — COASTAL LIGHT ══════════ */
+  :root{
+    --sea:#0f4c78; --sea-m:#1a6ea8; --sun:#e9a90f; --sun-d:#a5730a;
+    --bg:#f2f6fa; --panel:#ffffff; --panel2:#f6f9fc;
+    --line:rgba(13,35,56,.09); --line2:rgba(13,35,56,.15);
+    --ink:#0d2338; --ink2:#45647c; --ink3:#78909f;
+    --blue:#1f5fc4; --blue-d:#1a4fa8; --blue-bg:rgba(31,95,196,.10);
+    --green:#0c7d4b; --green-bg:rgba(12,125,75,.11);
+    --amber:#a5730a; --amber-bg:rgba(233,169,15,.14);
+    --red:#c04a37; --red-bg:rgba(192,74,55,.10);
+    --violet:#4f38ad; --violet-bg:rgba(97,70,198,.11);
+    --teal:#0a6675; --teal-bg:rgba(12,122,140,.11);
+    --navy:#0d2338; --shadow:0 14px 34px rgba(8,38,64,.09);
+    --sq:14px; --sq2:10px; --sq3:7px;
+  }
+  body[data-theme="dark"]{
+    --bg:#071624; --panel:#0d2236; --panel2:#11293f;
+    --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.13);
+    --ink:#eaf2f8; --ink2:#a7bccd; --ink3:#6b8497;
+    --blue-d:#7cc0f0; --blue-bg:rgba(31,95,196,.18);
+    --green:#3fd68f; --green-bg:rgba(63,214,143,.13);
+    --amber:#f0b34a; --amber-bg:rgba(240,179,74,.13);
+    --red:#ff8d7a; --red-bg:rgba(255,141,122,.12);
+    --violet:#a78bfa; --violet-bg:rgba(167,139,250,.14);
+    --teal:#3fd6d6; --teal-bg:rgba(63,214,214,.12);
+    --navy:#1a6ea8; --shadow:0 14px 34px rgba(0,0,0,.4);
+  }
+  html{background:var(--bg)}
+  body{background:var(--bg)}
+  body::before{content:'';position:fixed;inset:0;z-index:-2;background:var(--bg) url('images/coast-wash.jpg') center center/cover no-repeat}
+  body::after{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.84),rgba(255,255,255,.93) 45%,rgba(255,255,255,.97))}
+  body[data-theme="dark"]::before{opacity:.14}
+  body[data-theme="dark"]::after{background:linear-gradient(180deg,rgba(7,22,36,.90),rgba(7,22,36,.96))}
+  ::selection{background:var(--sun);color:#1b1200}
+
+  /* square the shaping */
+  .a-logo em,aside nav a .cnt,.site-link,.pill,.chip,.badge,.bcol-h .bn,
+  .bcard .bbar,.bcard .bbar i,.proj-bar,.proj-bar i,.hbar-row .ht,
+  .hbar-row .ht i,.tgl,.toast,.lock-tag{border-radius:var(--sq3) !important}
+  .card,.proj,.lock-card,.lock-kd{border-radius:var(--sq) !important}
+  aside nav a,.lock-card input,.lock-card button{border-radius:var(--sq2) !important}
+  .tgl{border-radius:var(--sq3) !important;width:46px}
+  .tgl::after,.tgl i{border-radius:var(--sq3) !important}
+  .card,.proj{box-shadow:0 10px 30px -22px rgba(8,38,64,.4)}
+  aside{background:rgba(255,255,255,.88);backdrop-filter:blur(14px)}
+  body[data-theme="dark"] aside{background:var(--panel);backdrop-filter:none}
+  .card,.proj{background:rgba(255,255,255,.90);backdrop-filter:blur(10px)}
+  body[data-theme="dark"] .card,body[data-theme="dark"] .proj{background:var(--panel);backdrop-filter:none}
+
+  /* coastal accents */
+  aside nav a.on{background:var(--blue-bg);color:var(--blue-d)}
+  .bcard .bbar i,.proj-bar i{background:linear-gradient(90deg,var(--sea),var(--sun))}
+
+  /* lock screen — coastal, not navy */
+  #lock{background:#0d2338}
+  #lock::before{content:'';position:absolute;inset:0;background:url('images/coast-wash.jpg') center/cover no-repeat;opacity:.38}
+  #lock::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,26,46,.82),rgba(6,26,46,.92))}
+  .lock-card{position:relative;z-index:1;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);box-shadow:0 40px 90px -40px rgba(0,0,0,.7)}
+  .lock-dia{border-radius:var(--sq2);background:linear-gradient(135deg,var(--sun),#b57f07);box-shadow:0 0 30px rgba(233,169,15,.4)}
+  .lock-kd{background:linear-gradient(135deg,var(--sea-m),var(--sea));box-shadow:0 0 34px rgba(26,110,168,.45)}
+  .lock-tag{color:#f7d79a;border-color:rgba(233,169,15,.4)}
+  .lock-card input:focus{border-color:var(--sun)}
+  .lock-card button{background:var(--sun);color:#1b1200}
+  .lock-card button:hover{background:#ffc233}
+
 </style>
 </head>
 <body>

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Owner Console — Khanya Digital</title>
+<meta name="theme-color" content="#05090f">
+<meta name="robots" content="noindex">
+<script>document.documentElement.className+=" js"</script>
+<link rel="stylesheet" href="theme.css">
+<style>
+/* ══════════ LOCK ══════════ */
+#lock{position:fixed;inset:0;z-index:500;background:var(--ink);display:grid;place-items:center;padding:1.4rem;
+  transition:opacity .55s var(--ease),visibility .55s}
+#lock.gone{opacity:0;visibility:hidden;pointer-events:none}
+#lockField{position:absolute;inset:0}
+.lk{position:relative;z-index:2;width:min(420px,100%);border:1px solid var(--gb);border-radius:20px;
+  padding:clamp(1.5rem,4vw,2.2rem);background:rgba(9,15,25,.9);backdrop-filter:blur(24px);
+  box-shadow:0 50px 100px -40px rgba(0,0,0,.9)}
+.lk .m{width:44px;height:44px;margin-bottom:1.2rem}.lk .m svg{width:100%;height:100%}
+.lk h1{font-size:1.7rem;margin-bottom:.4rem}
+.lk h1 em{font-style:normal;color:var(--gold)}
+.lk p{font-size:.84rem;color:var(--w3);line-height:1.6;margin-bottom:1.5rem}
+.fld{margin-bottom:.95rem}
+.fld label{display:block;font:700 .6rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--w3);margin-bottom:.4rem}
+.fld input,.fld select,.fld textarea{width:100%;padding:.72rem .9rem;background:rgba(0,0,0,.32);border:1px solid var(--gb);
+  border-radius:10px;color:var(--w);font-size:.87rem;transition:.3s;font-family:inherit}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--gold);
+  background:rgba(255,182,56,.05);box-shadow:0 0 0 3px rgba(255,182,56,.1)}
+.fld select option{background:#0d1728}
+.fld textarea{resize:vertical;min-height:80px;line-height:1.55}
+.lk-err{margin-top:.9rem;padding:.6rem .8rem;border-radius:9px;font-size:.8rem;display:none;
+  background:rgba(255,138,92,.1);border:1px solid rgba(255,138,92,.32);color:#ffb69b}
+.lk-err.on{display:block;animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.lk-hint{margin-top:1.2rem;padding:.8rem;border-radius:11px;border:1px dashed rgba(255,182,56,.3);
+  background:rgba(255,182,56,.05);font-size:.75rem;color:var(--w2);line-height:1.6}
+.lk-hint b{color:var(--gold);font-family:var(--mono)}
+
+/* ══════════ SHELL ══════════ */
+#app{display:none;min-height:100vh;grid-template-columns:236px 1fr}
+#app.on{display:grid}
+@media(max-width:900px){
+  #app.on{grid-template-columns:1fr}
+  aside{position:fixed;top:0;left:0;bottom:0;width:250px;z-index:150;height:100dvh;
+    transform:translateX(-102%);transition:transform .4s var(--ease)}
+  aside.open{transform:none;box-shadow:0 0 70px rgba(0,0,0,.85)}
+  #navScrim{position:fixed;inset:0;z-index:149;background:rgba(0,0,0,0);
+    pointer-events:none;transition:background .35s}
+  #navScrim.on{background:rgba(0,0,0,.55);pointer-events:all}
+}
+
+aside{background:#070c15;border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;padding:1.1rem .8rem}
+.a-logo{display:flex;align-items:center;gap:.6rem;padding:.3rem .5rem 1.3rem;text-decoration:none}
+.a-logo .m{width:28px;height:28px}.a-logo .m svg{width:100%;height:100%}
+.a-logo b{font:700 .64rem/1.3 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--w2)}
+.a-logo em{font-style:normal;display:block;color:var(--gold);font-size:.6rem}
+.a-sec{font:700 .56rem/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--w4);
+  padding:.6rem .5rem .5rem}
+aside nav{display:grid;gap:.15rem}
+aside nav a{display:flex;align-items:center;gap:.65rem;padding:.62rem .7rem;border-radius:10px;cursor:pointer;
+  color:var(--w3);font:600 .82rem/1 var(--ui);transition:.28s;position:relative}
+aside nav a:hover{background:rgba(255,255,255,.04);color:var(--w)}
+aside nav a.on{background:var(--gold-dim);color:var(--gold);box-shadow:inset 2px 0 0 var(--gold)}
+aside nav a svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+aside nav a .cnt{margin-left:auto;font:700 .62rem/1 var(--mono);padding:.18rem .38rem;border-radius:5px;
+  background:rgba(255,255,255,.07);color:var(--w2)}
+aside nav a.on .cnt{background:rgba(255,182,56,.2);color:var(--gold)}
+.a-foot{margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07)}
+.a-user{display:flex;align-items:center;gap:.6rem;padding:.55rem;border-radius:10px;background:rgba(255,255,255,.03);margin-bottom:.7rem}
+.a-av{width:30px;height:30px;border-radius:50%;background:var(--gold);color:#12100a;display:grid;place-items:center;
+  font:800 .7rem/1 var(--dis);flex:none}
+.a-user b{display:block;font-size:.78rem;color:var(--w)}
+.a-user span{font-size:.66rem;color:var(--w4)}
+.a-sys{font:500 .64rem/1.6 var(--mono);color:var(--w4);padding:0 .55rem .7rem}
+.a-sys .ok{color:var(--live)}
+
+main{min-width:0;background:var(--ink)}
+.topbar{position:sticky;top:0;z-index:90;display:flex;align-items:center;gap:1rem;
+  padding:.8rem clamp(1rem,3vw,2rem);background:rgba(5,9,15,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.crumb{font:600 .78rem/1 var(--ui);color:var(--w4)}
+.crumb b{color:var(--w)}
+.tb-r{margin-left:auto;display:flex;align-items:center;gap:.5rem}
+.kbd{display:inline-flex;align-items:center;gap:.4rem;padding:.42rem .7rem;border-radius:8px;border:1px solid var(--gb);
+  background:transparent;color:var(--w3);font:600 .72rem/1 var(--ui);cursor:pointer;transition:.28s}
+.kbd:hover{border-color:rgba(255,182,56,.4);color:var(--gold)}
+.kbd kbd{font:600 .64rem/1 var(--mono);padding:.14rem .3rem;border-radius:4px;background:rgba(255,255,255,.08);color:var(--w2)}
+.burger2{display:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--gb);background:transparent;
+  color:var(--w);cursor:pointer}
+@media(max-width:900px){.burger2{display:grid;place-items:center}}
+
+.view{display:none;padding:clamp(1.3rem,3vw,2.2rem)}
+.view.on{display:block;animation:fade .4s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}}
+.v-head{display:flex;justify-content:space-between;align-items:flex-end;gap:1.4rem;flex-wrap:wrap;margin-bottom:1.6rem}
+.v-head h2{font-size:clamp(1.4rem,3vw,2rem);letter-spacing:-.035em;margin-bottom:.35rem}
+.v-head p{font-size:.85rem;color:var(--w3);max-width:64ch;line-height:1.65}
+
+/* focus strip */
+.focus{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;
+  padding:1rem 1.2rem;border-radius:14px;margin-bottom:1.4rem;
+  border:1px solid rgba(255,182,56,.25);background:linear-gradient(120deg,rgba(255,182,56,.1),rgba(61,130,232,.06))}
+.focus b{display:block;font:700 .92rem/1.3 var(--dis);color:var(--w)}
+.focus span{font-size:.8rem;color:var(--w2)}
+.focus .acts{display:flex;gap:.5rem;flex-wrap:wrap}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:.8rem;margin-bottom:1.2rem}
+.stat{border:1px solid var(--gb);border-radius:14px;padding:1.05rem 1.1rem;background:rgba(255,255,255,.025);
+  transition:.4s var(--ease);position:relative;overflow:hidden}
+.stat:hover{border-color:rgba(255,182,56,.3);transform:translateY(-3px)}
+.stat span{display:block;font:700 .6rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--w4);margin-bottom:.55rem}
+.stat b{font:700 1.75rem/1 var(--dis);letter-spacing:-.035em;color:var(--w)}
+.stat .d{font:600 .68rem/1 var(--ui);margin-left:.4rem}
+.stat .d.up{color:var(--live)}.stat .d.dn{color:var(--warn)}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+@media(max-width:960px){.g2{grid-template-columns:1fr}}
+.card{border:1px solid var(--gb);border-radius:15px;background:rgba(255,255,255,.022);padding:1.2rem;margin-bottom:1rem}
+.card:hover{transform:none;border-color:var(--gb)}
+.card::before{display:none}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.card-h h3{font-size:.98rem}
+.card-h .sub{font:500 .7rem/1 var(--mono);color:var(--w4)}
+
+/* chart */
+.chart{width:100%;height:132px;display:block;overflow:visible}
+.chart .area{fill:url(#gg)}
+.chart .line{fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chart .pt{fill:var(--gold);opacity:0;transition:opacity .25s}
+.chart:hover .pt{opacity:1}
+.chart .gl{stroke:rgba(255,255,255,.06);stroke-width:1}
+.chart .lb{font:600 8px var(--mono);fill:var(--w4)}
+
+/* board */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:.8rem;overflow-x:auto;padding-bottom:.8rem}
+.col{background:rgba(255,255,255,.022);border:1px solid var(--gb);border-radius:14px;padding:.8rem;min-height:220px;transition:.3s}
+.col.over{border-color:var(--gold);background:rgba(255,182,56,.06)}
+.col-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;padding:0 .2rem}
+.col-h b{font:700 .66rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--w3)}
+.col-h span{font:700 .64rem/1 var(--mono);padding:.16rem .4rem;border-radius:5px;background:rgba(255,255,255,.07);color:var(--w2)}
+.bcard{border:1px solid var(--gb);border-radius:11px;padding:.75rem;background:#0b1220;margin-bottom:.5rem;cursor:grab;
+  transition:.3s var(--ease)}
+.bcard:hover{border-color:rgba(255,182,56,.35);transform:translateY(-2px)}
+.bcard.drag{opacity:.4}
+.bcard b{display:block;font-size:.83rem;color:var(--w);margin-bottom:.2rem;font-weight:600}
+.bcard span{font-size:.72rem;color:var(--w4);display:block}
+.bcard .row{display:flex;justify-content:space-between;align-items:center;margin-top:.6rem;gap:.4rem}
+.mv{width:22px;height:22px;border-radius:6px;border:1px solid var(--gb);background:transparent;color:var(--w3);
+  cursor:pointer;font-size:.7rem;transition:.25s}
+.mv:hover{border-color:var(--gold);color:var(--gold)}
+
+/* table */
+.tw{overflow-x:auto;border:1px solid var(--gb);border-radius:15px;background:rgba(255,255,255,.022)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{text-align:left;padding:.8rem 1rem;font:700 .6rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--w4);border-bottom:1px solid rgba(255,255,255,.09);white-space:nowrap}
+td{padding:.85rem 1rem;font-size:.82rem;color:var(--w2);border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr{transition:background .25s;cursor:pointer}
+tbody tr:hover{background:rgba(255,182,56,.045)}
+td b{color:var(--w);font-weight:600;display:block}
+td .em{font-size:.75rem;color:var(--w4)}
+.brief{max-width:290px;color:var(--w3);font-size:.78rem;line-height:1.55;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sel{background:rgba(0,0,0,.35);border:1px solid var(--gb);border-radius:7px;color:var(--w);
+  font:600 .72rem/1 var(--ui);padding:.35rem .5rem;cursor:pointer}
+.sel option{background:#0d1728}
+
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem}
+.chip{padding:.4rem .8rem;border-radius:999px;border:1px solid var(--gb);background:transparent;color:var(--w3);
+  font:600 .73rem/1 var(--ui);cursor:pointer;transition:.28s}
+.chip:hover{color:var(--w)}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#12100a}
+.search{display:flex;align-items:center;gap:.5rem;padding:.42rem .8rem;border:1px solid var(--gb);border-radius:999px;
+  background:rgba(0,0,0,.3)}
+.search input{background:none;border:0;outline:none;color:var(--w);font-size:.8rem;width:170px}
+.search svg{width:13px;height:13px;fill:none;stroke:var(--w4);stroke-width:2}
+
+/* project rows */
+.prow{border:1px solid var(--gb);border-radius:14px;padding:1.1rem;background:rgba(255,255,255,.022);margin-bottom:.7rem}
+.prow-h{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;margin-bottom:.9rem}
+.prow-h b{font:600 .98rem/1.3 var(--dis);color:var(--w);display:block;letter-spacing:-.02em}
+.prow-h span{font-size:.75rem;color:var(--w4)}
+.pstep{display:flex;gap:.3rem;margin-bottom:.8rem}
+.pstep button{flex:1;padding:.5rem .3rem;border-radius:8px;border:1px solid var(--gb);background:transparent;
+  color:var(--w4);font:600 .64rem/1.2 var(--mono);letter-spacing:.04em;cursor:pointer;transition:.28s}
+.pstep button:hover{border-color:rgba(255,182,56,.4);color:var(--w2)}
+.pstep button.done{background:rgba(255,182,56,.12);border-color:rgba(255,182,56,.3);color:var(--gold)}
+.pstep button.cur{background:var(--gold);border-color:var(--gold);color:#12100a}
+
+/* funnel + breakdown */
+.fnl{display:grid;gap:.55rem}
+.fnl-r{display:grid;grid-template-columns:110px 1fr 44px;gap:.7rem;align-items:center;font-size:.78rem}
+.fnl-r span{color:var(--w3)}
+.fnl-b{height:22px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+.fnl-b i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),rgba(255,182,56,.35));
+  border-radius:6px;width:0;transition:width 1s var(--ease)}
+.fnl-r b{text-align:right;font-family:var(--dis);color:var(--w)}
+
+.bars{display:flex;align-items:flex-end;gap:5px;height:120px}
+.bars i{flex:1;background:linear-gradient(180deg,var(--blue),rgba(61,130,232,.2));border-radius:4px 4px 0 0;
+  position:relative;transform-origin:bottom;animation:bIn .7s var(--ease) backwards;min-height:3px}
+@keyframes bIn{from{transform:scaleY(0)}}
+.bars i:hover::after{content:attr(data-v);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+  font:600 .62rem/1 var(--mono);color:var(--w);background:#0d1728;padding:.22rem .4rem;border-radius:4px;
+  border:1px solid var(--gb);white-space:nowrap;margin-bottom:4px}
+
+.empty{text-align:center;padding:2.6rem 1.2rem;color:var(--w4);font-size:.83rem;line-height:1.7}
+.empty b{display:block;color:var(--w2);font-size:.95rem;margin-bottom:.4rem;font-family:var(--dis)}
+
+/* add form */
+.addf{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;align-items:end}
+.addf .fld{margin:0}
+
+/* drawer */
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:200;background:#080f1b;
+  border-left:1px solid var(--gb);transform:translateX(102%);transition:transform .45s var(--ease);
+  overflow-y:auto;padding:1.4rem}
+#drawer.on{transform:none}
+#dscrim{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,0);pointer-events:none;transition:background .4s}
+#dscrim.on{background:rgba(0,0,0,.55);pointer-events:all}
+.dr-h{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.2rem}
+.dr-h h3{font-size:1.2rem}
+.dr-row{display:flex;justify-content:space-between;gap:1rem;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.82rem}
+.dr-row span:first-child{color:var(--w4);font:600 .64rem/1.5 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.dr-row span:last-child{color:var(--w);text-align:right}
+.dr-brief{margin-top:1rem;padding:.9rem;border-radius:11px;background:rgba(255,255,255,.03);
+  border:1px solid var(--gb);font-size:.83rem;color:var(--w2);line-height:1.68;white-space:pre-wrap}
+
+/* command palette */
+#pal{position:fixed;inset:0;z-index:300;display:none;padding-top:12vh;justify-content:center;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+#pal.on{display:flex;animation:fade .25s ease}
+.pal-box{width:min(520px,92vw);height:max-content;background:#0b1220;border:1px solid var(--gb);border-radius:16px;
+  overflow:hidden;box-shadow:0 50px 100px -30px rgba(0,0,0,.9)}
+.pal-box input{width:100%;padding:1rem 1.2rem;background:transparent;border:0;outline:none;color:var(--w);
+  font-size:1rem;border-bottom:1px solid rgba(255,255,255,.08);font-family:inherit}
+.pal-list{max-height:320px;overflow-y:auto;padding:.4rem}
+.pal-i{display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;border-radius:9px;cursor:pointer;
+  font-size:.85rem;color:var(--w2)}
+.pal-i.sel,.pal-i:hover{background:var(--gold-dim);color:var(--gold)}
+.pal-i em{margin-left:auto;font:500 .66rem/1 var(--mono);color:var(--w4);font-style:normal}
+
+#toast{position:fixed;left:50%;bottom:1.6rem;transform:translate(-50%,150%);z-index:600;padding:.75rem 1.3rem;
+  border-radius:999px;background:#0d1728;border:1px solid rgba(255,182,56,.4);color:var(--w);font-size:.83rem;
+  transition:transform .5s var(--pop);box-shadow:0 18px 40px -12px rgba(0,0,0,.8)}
+#toast.on{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOCK ══════════ -->
+<div id="lock">
+  <canvas id="lockField"></canvas>
+  <div class="lk">
+    <div class="m"><svg viewBox="0 0 100 100"><g transform="rotate(-8 50 50)">
+      <path d="M30 22V78" stroke="#3d82e8" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M30 50 L56 26 M38 50 L56 74" stroke="#3d82e8" stroke-width="11" stroke-linecap="round" fill="none"/>
+      <path d="M56 26a25 25 0 0 1 0 48" fill="none" stroke="#ffb638" stroke-width="11" stroke-linecap="round"/>
+    </g></svg></div>
+    <span class="tag g" style="margin-bottom:1rem">Restricted</span>
+    <h1>Owner <em>console</em></h1>
+    <p>Leads, projects, pipeline and analytics — the operating view for Khanya Digital.</p>
+    <div class="fld"><label>Email</label><input type="email" id="lkEmail" placeholder="hello@khanyadigital.co.za" autocomplete="username"></div>
+    <div class="fld"><label>Password</label><input type="password" id="lkPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')unlock()"></div>
+    <button class="btn" style="width:100%;justify-content:center" onclick="unlock()">Unlock console<span class="ar">→</span></button>
+    <div class="lk-err" id="lkErr"></div>
+    <div class="lk-hint">Concept demo — <b>hello@khanyadigital.co.za</b> / <b>khanya2026</b></div>
+    <div style="margin-top:1.1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;font-size:.76rem">
+      <a href="client.html" style="color:var(--w4);text-decoration:none">Client portal</a>
+      <a href="index.html" style="color:var(--w4);text-decoration:none">← Back to the site</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app">
+  <div id="navScrim" onclick="mobileNav(false)"></div>
+  <aside>
+    <a class="a-logo" href="index.html">
+      <span class="m"><svg viewBox="0 0 100 100"><g transform="rotate(-8 50 50)">
+        <path d="M30 22V78" stroke="#3d82e8" stroke-width="11" stroke-linecap="round" fill="none"/>
+        <path d="M30 50 L56 26 M38 50 L56 74" stroke="#3d82e8" stroke-width="11" stroke-linecap="round" fill="none"/>
+        <path d="M56 26a25 25 0 0 1 0 48" fill="none" stroke="#ffb638" stroke-width="11" stroke-linecap="round"/>
+      </g></svg></span>
+      <b>Khanya Digital<em>Owner console</em></b>
+    </a>
+    <span class="a-sec">Workspace</span>
+    <nav id="nav">
+      <a class="on" data-v="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
+      <a data-v="board"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="8" rx="1"/></svg>Board</a>
+      <a data-v="projects"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Projects<span class="cnt" id="cProj">0</span></a>
+      <a data-v="leads"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Leads<span class="cnt" id="cLeads">0</span></a>
+      <a data-v="inbox"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Inbox<span class="cnt" id="cInbox">0</span></a>
+      <a data-v="analytics"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Analytics</a>
+      <a data-v="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.6 7a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V1a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 17 2.6a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H23a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.2z"/></svg>Settings</a>
+    </nav>
+    <div class="a-foot">
+      <div class="a-user"><span class="a-av">K</span><span><b>Khanya Ngema</b><span>Founder · Owner</span></span></div>
+      <div class="a-sys"><span class="ok">● All changes saved</span><br><span id="clock">—</span> · concept v3</div>
+      <button class="btn gh sm" style="width:100%;justify-content:center" onclick="lockUp()">Lock console</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <button class="burger2" onclick="mobileNav()">☰</button>
+      <span class="crumb">Khanya Digital / <b id="crumb">Overview</b></span>
+      <div class="tb-r">
+        <button class="kbd" onclick="pal(true)">Search &amp; jump <kbd>Ctrl K</kbd></button>
+        <a class="kbd" href="index.html" target="_blank">↗ Live site</a>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="view on" id="v-overview">
+      <div class="v-head">
+        <div><h2>Command centre</h2><p><b style="color:var(--w)">Welcome back, Khanya.</b> Every lead, build and message in one operating view.</p></div>
+        <button class="btn sm" onclick="show('projects')">+ New project</button>
+      </div>
+
+      <div class="focus">
+        <div style="display:flex;gap:.7rem;align-items:center">
+          <span class="tag l"><i class="dot"></i>Live</span>
+          <div><b id="fsTitle">The studio is lit.</b><span id="fsLine">Nothing waiting on you right now.</span></div>
+        </div>
+        <div class="acts">
+          <button class="btn gh sm" onclick="show('leads')">Review leads</button>
+          <button class="btn gh sm" onclick="show('board')">Move the board</button>
+        </div>
+      </div>
+
+      <div class="stats" id="ovStats"></div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h3>Leads — last 14 days</h3><span class="sub" id="ovChartSub"></span></div>
+          <div id="ovChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Latest leads</h3><button class="btn gh sm" onclick="show('leads')">All leads →</button></div>
+          <div id="ovLeads"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h3>Projects in motion</h3><button class="btn gh sm" onclick="show('board')">Open board →</button></div>
+        <div id="ovProjects"></div>
+      </div>
+    </section>
+
+    <!-- BOARD -->
+    <section class="view" id="v-board">
+      <div class="v-head">
+        <div><h2>Progress board</h2><p>Drag a card between columns, or use ◀ ▶. The client's live tracker updates the moment you do.</p></div>
+        <button class="btn sm" onclick="show('projects')">+ New project</button>
+      </div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="view" id="v-projects">
+      <div class="v-head"><div><h2>Client projects</h2><p>Add a build, then click a stage to set its progress. Linking a client email connects their portal.</p></div></div>
+      <div class="card">
+        <div class="card-h"><h3>Add a project</h3></div>
+        <div class="addf">
+          <div class="fld"><label>Project name</label><input id="npName" placeholder="e.g. Bloom Florist — website"></div>
+          <div class="fld"><label>Client</label><input id="npClient" placeholder="Business name"></div>
+          <div class="fld"><label>Budget</label><input id="npBudget" placeholder="R 8,500"></div>
+          <div class="fld"><label>Client email</label><input id="npEmail" placeholder="client@email.com"></div>
+          <button class="btn sm" onclick="addProject()">+ Add</button>
+        </div>
+      </div>
+      <div id="projList"></div>
+    </section>
+
+    <!-- LEADS -->
+    <section class="view" id="v-leads">
+      <div class="v-head">
+        <div><h2>Leads &amp; requests</h2><p>Every submission from the site lands here automatically. Click a row for the full brief.</p></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+          <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><input id="leadSearch" placeholder="Search leads…" oninput="renderLeads()"></div>
+          <button class="btn gh sm" onclick="exportCSV()">Export CSV</button>
+        </div>
+      </div>
+      <div class="chips" id="leadChips"></div>
+      <div class="card">
+        <div class="card-h"><h3>Quick add</h3><span class="sub">For phone or WhatsApp enquiries</span></div>
+        <div class="addf">
+          <div class="fld"><label>Name</label><input id="nlName" placeholder="Client name"></div>
+          <div class="fld"><label>Email / phone</label><input id="nlEmail" placeholder="Contact"></div>
+          <div class="fld"><label>Budget</label><input id="nlBudget" placeholder="R 6,000"></div>
+          <button class="btn sm" onclick="addLead()">+ Add lead</button>
+        </div>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Lead</th><th>Service</th><th>Budget</th><th>Brief</th><th>Received</th><th>Status</th><th></th></tr></thead>
+          <tbody id="leadRows"></tbody>
+        </table>
+        <div class="empty" id="leadEmpty" style="display:none"><b>No leads here yet.</b>Submissions from the contact form appear automatically. Try the form on the live site.</div>
+      </div>
+    </section>
+
+    <!-- INBOX -->
+    <section class="view" id="v-inbox">
+      <div class="v-head"><div><h2>Client inbox</h2><p>Messages and priority concerns raised from the client workspace. Reply here and it appears in their portal.</p></div></div>
+      <div id="inboxList"></div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="view" id="v-analytics">
+      <div class="v-head"><div><h2>Analytics</h2><p>Computed from your actual leads and projects. No setup, no tracking scripts.</p></div></div>
+      <div class="stats" id="anStats"></div>
+      <div class="g2">
+        <div class="card"><div class="card-h"><h3>Leads per week</h3><span class="sub">last 8 weeks</span></div><div class="bars" id="anWeeks"></div></div>
+        <div class="card"><div class="card-h"><h3>Lead funnel</h3><span class="sub">new → won</span></div><div class="fnl" id="anFunnel"></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-h"><h3>Requests by service</h3></div><div class="fnl" id="anServices"></div></div>
+        <div class="card"><div class="card-h"><h3>Projects by stage</h3></div><div class="fnl" id="anStages"></div></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="v-settings">
+      <div class="v-head"><div><h2>Settings</h2><p>Access, data and housekeeping for this console.</p></div></div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h3>Access</h3></div>
+          <div class="fld"><label>Owner email</label><input id="setEmail" placeholder="hello@khanyadigital.co.za"></div>
+          <div class="fld"><label>New password (min 6)</label><input type="password" id="setPass" placeholder="Leave blank to keep current"></div>
+          <button class="btn sm" onclick="saveAccess()">Save access</button>
+          <p style="margin-top:1rem;font-size:.75rem;color:var(--w4);line-height:1.6">
+            Client-side auth is a gate, not security. Anything sensitive belongs behind Supabase row-level security before this goes on a public URL.</p>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Data</h3></div>
+          <p style="font-size:.8rem;color:var(--w3);line-height:1.65;margin-bottom:1rem">
+            Everything in this concept lives in your browser under <code style="font-family:var(--mono);color:var(--gold)">kdc_*</code> keys —
+            separate from the live site's data, so nothing here can damage it.</p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="btn gh sm" onclick="backup()">Download backup</button>
+            <button class="btn gh sm" onclick="document.getElementById('restoreIn').click()">Restore</button>
+            <button class="btn gh sm" onclick="reseed()">Reset demo data</button>
+          </div>
+          <input type="file" id="restoreIn" accept="application/json" style="display:none" onchange="restore(this)">
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="dscrim" onclick="drawer(false)"></div>
+<aside id="drawer"></aside>
+
+<div id="pal">
+  <div class="pal-box">
+    <input id="palIn" placeholder="Jump to a view, lead or project…" oninput="palRender()" onkeydown="palKey(event)">
+    <div class="pal-list" id="palList"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="kinetic.js"></script>
+<script>
+'use strict';
+/* ══════════════════════════════════════════════════════════════════
+   CONCEPT BUILD — kdc_* keys, isolated from the live site's kd_* data.
+   ══════════════════════════════════════════════════════════════════ */
+var K={leads:'kdc_leads',projects:'kdc_projects',msgs:'kdc_msgs',clients:'kdc_clients',
+       auth:'kdc_owner',unlocked:'kdc_unlocked',seeded:'kdc_seeded_admin'};
+var STAGES=['Scoping','In development','In review','Ready','Live'];
+var SERVICES={website:'Website',automation:'Automation',bundle:'Site + automation',app:'App',
+              '3d':'3D',maintenance:'Care plan',strategy:'Strategy',other:'Other'};
+var STATUSES=['new','contacted','quoted','won','lost'];
+
+function load(k,d){try{return JSON.parse(localStorage.getItem(k)) ?? d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function money(s){var n=parseInt(String(s).replace(/[^\d]/g,''),10);return isNaN(n)?0:n}
+function ago(iso){
+  var d=(Date.now()-new Date(iso))/864e5;
+  if(d<1)return 'today'; if(d<2)return 'yesterday';
+  if(d<14)return Math.floor(d)+' days ago';
+  return new Date(iso).toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+}
+
+/* ── seed ── */
+(function seed(){
+  if(load(K.seeded,false))return;
+  var d=function(n){return new Date(Date.now()-n*864e5).toISOString()};
+  save(K.leads,[
+    {id:'L1',name:'Thandi Mokoena',email:'thandi@blossomsalon.co.za',phone:'+27 71 234 5678',company:'Blossom Salon',
+     service:'bundle',budget:'R 14,000',timeline:'2-4weeks',status:'quoted',created_at:d(1),
+     message:'We take bookings over WhatsApp and lose half of them. Need a proper site with online booking and reminders that actually send.'},
+    {id:'L2',name:'Werner Botha',email:'werner@bothaplumbing.co.za',phone:'+27 82 445 1190',company:'Botha Plumbing',
+     service:'automation',budget:'R 9,000',timeline:'asap',status:'contacted',created_at:d(2),
+     message:'Quotes take me two evenings a week. If a form could produce a quote I would take my evenings back.'},
+    {id:'L3',name:'Naledi Sithole',email:'hello@naledistudio.co.za',phone:'',company:'Naledi Studio',
+     service:'website',budget:'R 5,000',timeline:'flexible',status:'new',created_at:d(3),
+     message:'One-page site for a small design studio. Something with actual personality, not a template.'},
+    {id:'L4',name:'Ravi Pillay',email:'ravi@coastproperty.co.za',phone:'+27 83 990 2211',company:'Coast Property',
+     service:'bundle',budget:'R 26,000',timeline:'1-2months',status:'new',created_at:d(5),
+     message:'Listings site plus enquiry routing to the right agent. Currently everything sits in one shared inbox for days.'},
+    {id:'L5',name:'Ayanda Khumalo',email:'ayanda@peakfit.co.za',phone:'+27 76 118 4402',company:'Peak Fitness',
+     service:'website',budget:'R 11,000',timeline:'2-4weeks',status:'won',created_at:d(9),
+     message:'Class timetable, membership tiers, and a sign-up flow that does not need the front desk.'},
+    {id:'L6',name:'Marius de Wet',email:'marius@dewetlaw.co.za',phone:'',company:'De Wet Attorneys',
+     service:'website',budget:'R 8,000',timeline:'flexible',status:'lost',created_at:d(14),
+     message:'Went with a cheaper option in the end. Happy to be contacted next year.'},
+    {id:'L7',name:'Zanele Dube',email:'zanele@brightsmile.co.za',phone:'+27 79 552 0087',company:'Bright Smile Dental',
+     service:'automation',budget:'R 12,500',timeline:'asap',status:'new',created_at:d(0),
+     message:'No-shows are killing us. Need reminders and a way for patients to reschedule themselves.'}
+  ]);
+  /* Merge, never clobber — the client workspace seeds P1 with its own
+     richer fields, and whichever surface loads first must not wipe it. */
+  var existing=load(K.projects,[]);
+  [
+    {id:'P1',name:'Harvest Homes — website & lead routing',client:'Harvest Homes',email:'demo@client.co.za',
+     budget:'R 14,500',stage:2,launch:'14 March 2026',notes:'Waiting on final agent bios.',created_at:d(28)},
+    {id:'P2',name:'Peak Fitness — class timetable site',client:'Peak Fitness',email:'ayanda@peakfit.co.za',
+     budget:'R 11,000',stage:4,notes:'Live since Feb. Care plan active.',created_at:d(52)},
+    {id:'P3',name:'Blossom Salon — booking system',client:'Blossom Salon',email:'thandi@blossomsalon.co.za',
+     budget:'R 14,000',stage:0,notes:'Deposit invoice sent.',created_at:d(3)}
+  ].forEach(function(p){
+    if(!existing.some(function(x){return x.id===p.id}))existing.push(p);
+  });
+  save(K.projects,existing);
+  save(K.seeded,true);
+})();
+
+/* ══ lock ══ */
+Kinetic.lightField(document.getElementById('lockField'));
+function auth(){ return load(K.auth,{email:'hello@khanyadigital.co.za',pass:'khanya2026'}); }
+function unlock(){
+  var a=auth();
+  var em=document.getElementById('lkEmail').value.trim().toLowerCase();
+  var pw=document.getElementById('lkPass').value;
+  if(em!==a.email.toLowerCase()&&em!=='khanya'||pw!==a.pass){
+    var e=document.getElementById('lkErr');
+    e.textContent='Those credentials are not right.'; e.classList.add('on');
+    return;
+  }
+  sessionStorage.setItem(K.unlocked,'1');
+  open_();
+}
+function open_(){
+  document.getElementById('lock').classList.add('gone');
+  document.getElementById('app').classList.add('on');
+  renderAll();
+  setInterval(clock,1000); clock();
+}
+function lockUp(){ sessionStorage.removeItem(K.unlocked); location.reload(); }
+if(sessionStorage.getItem(K.unlocked))open_();
+
+function clock(){
+  var el=document.getElementById('clock');
+  if(el)el.textContent=new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+/* ══ nav ══ */
+document.getElementById('nav').addEventListener('click',function(e){
+  var a=e.target.closest('a[data-v]'); if(a)show(a.dataset.v);
+});
+function show(v){
+  document.querySelectorAll('.view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+v)});
+  document.querySelectorAll('#nav a').forEach(function(a){a.classList.toggle('on',a.dataset.v===v)});
+  document.getElementById('crumb').textContent=v.charAt(0).toUpperCase()+v.slice(1);
+  mobileNav(false);
+  window.scrollTo(0,0);
+  renderAll();
+}
+function mobileNav(force){
+  var open=force===undefined
+    ? !document.querySelector('aside').classList.contains('open') : force;
+  document.querySelector('aside').classList.toggle('open',open);
+  document.getElementById('navScrim').classList.toggle('on',open);
+}
+
+/* ══ render ══ */
+function renderAll(){
+  var leads=load(K.leads,[]), projects=load(K.projects,[]), msgs=load(K.msgs,[]);
+  document.getElementById('cProj').textContent=projects.length;
+  document.getElementById('cLeads').textContent=leads.filter(function(l){return l.status==='new'}).length||leads.length;
+  document.getElementById('cInbox').textContent=msgs.filter(function(m){return !m.reply}).length;
+  renderOverview(leads,projects,msgs);
+  renderBoard(projects);
+  renderProjects(projects);
+  renderLeads();
+  renderInbox(msgs);
+  renderAnalytics(leads,projects);
+  var a=auth(); document.getElementById('setEmail').value=a.email;
+}
+
+/* ── overview ── */
+function renderOverview(leads,projects,msgs){
+  var newL=leads.filter(function(l){return l.status==='new'}).length;
+  var open=leads.filter(function(l){return ['new','contacted','quoted'].indexOf(l.status)>=0});
+  var pipe=open.reduce(function(s,l){return s+money(l.budget)},0);
+  var won=leads.filter(function(l){return l.status==='won'}).reduce(function(s,l){return s+money(l.budget)},0);
+  var motion=projects.filter(function(p){return p.stage<4}).length;
+  var concerns=msgs.filter(function(m){return m.kind==='concern'&&!m.reply}).length;
+
+  document.getElementById('ovStats').innerHTML=[
+    ['New leads',newL,newL?'needs a reply':'all handled',newL?'up':''],
+    ['Open pipeline','R'+pipe.toLocaleString('en-US'),open.length+' live enquiries',''],
+    ['Won this period','R'+won.toLocaleString('en-US'),'signed work',''],
+    ['Projects in motion',motion,'not yet launched',''],
+    ['Open concerns',concerns,concerns?'priority':'none raised',concerns?'dn':'']
+  ].map(function(s){
+    return '<div class="stat"><span>'+s[0]+'</span><b>'+s[1]+'</b>'+
+      '<div style="margin-top:.4rem;font-size:.72rem;color:var(--w4)">'+s[2]+'</div></div>';
+  }).join('');
+
+  var t=document.getElementById('fsTitle'), l=document.getElementById('fsLine');
+  if(concerns){ t.textContent='A client raised a concern.'; l.textContent=concerns+' unanswered in the inbox — those go first.'; }
+  else if(newL){ t.textContent=newL+' lead'+(newL>1?'s':'')+' waiting on you.'; l.textContent='The promise on the site is a reply within 24 hours. Clock is running.'; }
+  else { t.textContent='The studio is lit.'; l.textContent='No leads or concerns waiting. Good time to move the board.'; }
+
+  /* chart */
+  var days=14, buckets=new Array(days).fill(0);
+  leads.forEach(function(le){
+    var d=Math.floor((Date.now()-new Date(le.created_at))/864e5);
+    if(d>=0&&d<days)buckets[days-1-d]++;
+  });
+  document.getElementById('ovChart').innerHTML=areaChart(buckets);
+  document.getElementById('ovChartSub').textContent=buckets.reduce(function(a,b){return a+b},0)+' total';
+
+  document.getElementById('ovLeads').innerHTML=leads.slice(0,5).map(function(le){
+    return '<div style="display:flex;gap:.7rem;align-items:center;padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05)">'+
+      '<span class="a-av" style="width:28px;height:28px;font-size:.62rem;background:rgba(255,182,56,.16);color:var(--gold)">'+
+        esc((le.name||'?').slice(0,1).toUpperCase())+'</span>'+
+      '<span style="flex:1;min-width:0"><b style="display:block;font-size:.83rem;color:var(--w)">'+esc(le.name)+'</b>'+
+        '<span style="font-size:.72rem;color:var(--w4)">'+esc(SERVICES[le.service]||le.service||'—')+' · '+esc(le.budget||'—')+'</span></span>'+
+      '<span class="tag '+(le.status==='new'?'g':le.status==='won'?'l':'')+'">'+esc(le.status)+'</span></div>';
+  }).join('')||'<div class="empty"><b>No leads yet.</b>They appear the moment someone submits the contact form.</div>';
+
+  document.getElementById('ovProjects').innerHTML=projects.length?projects.map(function(p){
+    var pct=Math.round((p.stage+1)/STAGES.length*100);
+    return '<div style="padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.05)">'+
+      '<div style="display:flex;justify-content:space-between;gap:1rem;margin-bottom:.45rem">'+
+        '<b style="font-size:.85rem;color:var(--w)">'+esc(p.name)+'</b>'+
+        '<span class="tag '+(p.stage===4?'l':'g')+'">'+STAGES[p.stage]+'</span></div>'+
+      '<div class="fnl-b" style="height:5px"><i style="width:'+pct+'%"></i></div></div>';
+  }).join(''):'<div class="empty"><b>No projects yet.</b>Add one from the Projects tab.</div>';
+}
+
+function areaChart(vals){
+  var W=520,H=132,pad=14,max=Math.max.apply(null,vals.concat([2]));
+  var pts=vals.map(function(v,i){
+    return [pad+i*((W-pad*2)/(vals.length-1)), H-pad-(v/max)*(H-pad*2)];
+  });
+  var line=pts.map(function(p,i){
+    if(i===0)return 'M'+p[0]+' '+p[1];
+    var pv=pts[i-1],mx=(pv[0]+p[0])/2;
+    return 'C'+mx+' '+pv[1]+','+mx+' '+p[1]+','+p[0]+' '+p[1];
+  }).join(' ');
+  var area=line+' L'+pts[pts.length-1][0]+' '+(H-pad)+' L'+pts[0][0]+' '+(H-pad)+' Z';
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+
+    '<defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0%" stop-color="#ffb638" stop-opacity=".28"/>'+
+      '<stop offset="100%" stop-color="#ffb638" stop-opacity="0"/></linearGradient></defs>'+
+    '<line class="gl" x1="0" y1="'+(H-pad)+'" x2="'+W+'" y2="'+(H-pad)+'"/>'+
+    '<path class="area" d="'+area+'"/><path class="line" d="'+line+'"/>'+
+    pts.map(function(p){return '<circle class="pt" cx="'+p[0]+'" cy="'+p[1]+'" r="3"/>'}).join('')+
+  '</svg>';
+}
+
+/* ── board (drag + buttons) ── */
+function renderBoard(projects){
+  document.getElementById('board').innerHTML=STAGES.map(function(s,i){
+    var inCol=projects.filter(function(p){return p.stage===i});
+    return '<div class="col" data-stage="'+i+'" ondragover="dOver(event,this)" ondragleave="this.classList.remove(\'over\')" ondrop="dDrop(event,this)">'+
+      '<div class="col-h"><b>'+s+'</b><span>'+inCol.length+'</span></div>'+
+      inCol.map(function(p){
+        return '<div class="bcard" draggable="true" data-id="'+p.id+'" ondragstart="dStart(event,this)" ondragend="this.classList.remove(\'drag\')">'+
+          '<b>'+esc(p.name)+'</b><span>'+esc(p.client)+' · '+esc(p.budget||'—')+'</span>'+
+          '<div class="row"><button class="mv" onclick="mv(\''+p.id+'\',-1)" title="Back">◀</button>'+
+          '<span style="flex:1;font-size:.68rem;color:var(--w4)">'+ago(p.created_at)+'</span>'+
+          '<button class="mv" onclick="mv(\''+p.id+'\',1)" title="Forward">▶</button></div></div>';
+      }).join('')+
+      (inCol.length?'':'<div style="padding:1.2rem .4rem;text-align:center;font-size:.74rem;color:var(--w4)">Empty</div>')+
+    '</div>';
+  }).join('');
+}
+var dragId=null;
+function dStart(e,el){ dragId=el.dataset.id; el.classList.add('drag'); e.dataTransfer.effectAllowed='move'; }
+function dOver(e,col){ e.preventDefault(); col.classList.add('over'); }
+function dDrop(e,col){
+  e.preventDefault(); col.classList.remove('over');
+  if(!dragId)return;
+  setStage(dragId,+col.dataset.stage); dragId=null;
+}
+function mv(id,dir){
+  var p=load(K.projects,[]).find(function(x){return x.id===id});
+  if(p)setStage(id,Math.max(0,Math.min(STAGES.length-1,p.stage+dir)));
+}
+function setStage(id,stage){
+  var list=load(K.projects,[]);
+  var p=list.find(function(x){return x.id===id});
+  if(!p||p.stage===stage)return;
+  p.stage=stage;
+  /* Moving the stage writes through to what the client sees: the old
+     "happening now" copy is cleared so their portal falls back to the
+     stage-derived text, and the move lands on their activity timeline. */
+  delete p.now; delete p.next; p.daysInStage=0;
+  p.timeline=(p.timeline||[]).map(function(t){t.hot=false;return t});
+  p.timeline.unshift({d:new Date().toISOString(),t:'Moved to '+STAGES[stage],
+    p:'The studio advanced this build to the '+STAGES[stage].toLowerCase()+' stage.',hot:true});
+  save(K.projects,list);
+  toast(p.name.split('—')[0].trim()+' → '+STAGES[stage]+'. Client portal updated.');
+  renderAll();
+}
+
+/* ── projects ── */
+function renderProjects(projects){
+  document.getElementById('projList').innerHTML=projects.length?projects.map(function(p){
+    return '<div class="prow">'+
+      '<div class="prow-h"><div><b>'+esc(p.name)+'</b><span>'+esc(p.client)+' · '+esc(p.budget||'—')+
+        (p.email?' · <span style="color:var(--gold)">'+esc(p.email)+'</span>':'')+'</span></div>'+
+        '<button class="btn gh sm" onclick="delProject(\''+p.id+'\')">Delete</button></div>'+
+      '<div class="pstep">'+STAGES.map(function(s,i){
+        return '<button class="'+(i<p.stage?'done':i===p.stage?'cur':'')+'" onclick="setStage(\''+p.id+'\','+i+')">'+s+'</button>';
+      }).join('')+'</div>'+
+      '<div class="fld" style="margin:0"><label>Private notes</label>'+
+        '<textarea onchange="noteProject(\''+p.id+'\',this.value)" placeholder="Only you see this…">'+esc(p.notes||'')+'</textarea></div>'+
+    '</div>';
+  }).join(''):'<div class="card"><div class="empty"><b>No projects yet.</b>Add one above and it appears on the board and in the client\'s portal.</div></div>';
+}
+function addProject(){
+  var n=document.getElementById('npName').value.trim();
+  if(!n)return toast('Give the project a name first.');
+  var list=load(K.projects,[]);
+  list.unshift({id:'P'+Date.now(),name:n,client:document.getElementById('npClient').value.trim()||'—',
+    email:document.getElementById('npEmail').value.trim().toLowerCase(),
+    budget:document.getElementById('npBudget').value.trim(),stage:0,notes:'',created_at:new Date().toISOString()});
+  save(K.projects,list);
+  ['npName','npClient','npBudget','npEmail'].forEach(function(i){document.getElementById(i).value=''});
+  toast('Project added to Scoping.'); renderAll();
+}
+function delProject(id){
+  var list=load(K.projects,[]).filter(function(p){return p.id!==id});
+  save(K.projects,list); toast('Project removed.'); renderAll();
+}
+function noteProject(id,v){
+  var list=load(K.projects,[]); var p=list.find(function(x){return x.id===id});
+  if(p){p.notes=v;save(K.projects,list);toast('Note saved.')}
+}
+
+/* ── leads ── */
+var leadFilter='all';
+function renderLeads(){
+  var leads=load(K.leads,[]);
+  var q=(document.getElementById('leadSearch').value||'').toLowerCase();
+
+  document.getElementById('leadChips').innerHTML=['all'].concat(STATUSES).map(function(s){
+    var n=s==='all'?leads.length:leads.filter(function(l){return l.status===s}).length;
+    return '<button class="chip'+(leadFilter===s?' on':'')+'" onclick="leadFilter=\''+s+'\';renderLeads()">'+
+      s.charAt(0).toUpperCase()+s.slice(1)+' ('+n+')</button>';
+  }).join('');
+
+  var rows=leads.filter(function(l){
+    if(leadFilter!=='all'&&l.status!==leadFilter)return false;
+    if(!q)return true;
+    return (l.name+' '+l.email+' '+(l.company||'')+' '+(l.message||'')).toLowerCase().indexOf(q)>=0;
+  });
+
+  document.getElementById('leadEmpty').style.display=rows.length?'none':'block';
+  document.getElementById('leadRows').innerHTML=rows.map(function(l){
+    return '<tr onclick="openLead(\''+l.id+'\')">'+
+      '<td><b>'+esc(l.name)+'</b><span class="em">'+esc(l.email)+(l.company?' · '+esc(l.company):'')+'</span></td>'+
+      '<td>'+esc(SERVICES[l.service]||l.service||'—')+'</td>'+
+      '<td>'+esc(l.budget||'—')+'</td>'+
+      '<td><div class="brief">'+esc(l.message||'')+'</div></td>'+
+      '<td>'+ago(l.created_at)+'</td>'+
+      '<td onclick="event.stopPropagation()"><select class="sel" onchange="setStatus(\''+l.id+'\',this.value)">'+
+        STATUSES.map(function(s){return '<option'+(l.status===s?' selected':'')+'>'+s+'</option>'}).join('')+
+      '</select></td>'+
+      '<td onclick="event.stopPropagation()"><button class="mv" onclick="delLead(\''+l.id+'\')" title="Delete">✕</button></td>'+
+    '</tr>';
+  }).join('');
+}
+function setStatus(id,v){
+  var list=load(K.leads,[]); var l=list.find(function(x){return x.id===id});
+  if(l){l.status=v;save(K.leads,list);toast(l.name+' → '+v);renderAll()}
+}
+function delLead(id){
+  save(K.leads,load(K.leads,[]).filter(function(l){return l.id!==id}));
+  toast('Lead removed.'); renderAll();
+}
+function addLead(){
+  var n=document.getElementById('nlName').value.trim();
+  if(!n)return toast('Name first.');
+  var list=load(K.leads,[]);
+  list.unshift({id:'L'+Date.now(),name:n,email:document.getElementById('nlEmail').value.trim(),
+    phone:'',company:'',service:'other',budget:document.getElementById('nlBudget').value.trim(),
+    timeline:'',status:'new',message:'Added manually from a phone or WhatsApp enquiry.',
+    created_at:new Date().toISOString()});
+  save(K.leads,list);
+  ['nlName','nlEmail','nlBudget'].forEach(function(i){document.getElementById(i).value=''});
+  toast('Lead added.'); renderAll();
+}
+function openLead(id){
+  var l=load(K.leads,[]).find(function(x){return x.id===id});
+  if(!l)return;
+  document.getElementById('drawer').innerHTML=
+    '<div class="dr-h"><div><span class="tag g">'+esc(l.status)+'</span>'+
+      '<h3 style="margin-top:.6rem">'+esc(l.name)+'</h3></div>'+
+      '<button class="mv" onclick="drawer(false)">✕</button></div>'+
+    '<div class="dr-row"><span>Email</span><span><a href="mailto:'+esc(l.email)+'" style="color:var(--gold);text-decoration:none">'+esc(l.email)+'</a></span></div>'+
+    '<div class="dr-row"><span>Phone</span><span>'+esc(l.phone||'—')+'</span></div>'+
+    '<div class="dr-row"><span>Business</span><span>'+esc(l.company||'—')+'</span></div>'+
+    '<div class="dr-row"><span>Service</span><span>'+esc(SERVICES[l.service]||l.service||'—')+'</span></div>'+
+    '<div class="dr-row"><span>Budget</span><span>'+esc(l.budget||'—')+'</span></div>'+
+    '<div class="dr-row"><span>Timeline</span><span>'+esc(l.timeline||'—')+'</span></div>'+
+    '<div class="dr-row"><span>Received</span><span>'+ago(l.created_at)+'</span></div>'+
+    '<div class="dr-brief">'+esc(l.message||'No brief supplied.')+'</div>'+
+    '<div style="display:flex;gap:.5rem;margin-top:1.2rem;flex-wrap:wrap">'+
+      '<a class="btn sm" href="mailto:'+esc(l.email)+'?subject=Your%20enquiry%20—%20Khanya%20Digital">Reply by email</a>'+
+      '<button class="btn gh sm" onclick="leadToProject(\''+l.id+'\')">Convert to project</button></div>';
+  drawer(true);
+}
+function drawer(on){
+  document.getElementById('drawer').classList.toggle('on',on);
+  document.getElementById('dscrim').classList.toggle('on',on);
+}
+function leadToProject(id){
+  var l=load(K.leads,[]).find(function(x){return x.id===id});
+  if(!l)return;
+  var list=load(K.projects,[]);
+  list.unshift({id:'P'+Date.now(),name:(l.company||l.name)+' — '+(SERVICES[l.service]||'build'),
+    client:l.company||l.name,email:l.email,budget:l.budget,stage:0,notes:'From lead: '+l.name,
+    created_at:new Date().toISOString()});
+  save(K.projects,list);
+  setStatus(id,'won');
+  drawer(false); show('board');
+  toast('Converted. It is on the board in Scoping.');
+}
+
+/* ── inbox ── */
+function renderInbox(msgs){
+  document.getElementById('inboxList').innerHTML=msgs.length?msgs.map(function(m){
+    return '<div class="card" style="margin-bottom:.7rem'+(m.kind==='concern'?';border-color:rgba(255,138,92,.3)':'')+'">'+
+      '<div class="card-h" style="margin-bottom:.7rem">'+
+        '<span class="tag '+(m.kind==='concern'?'':'b')+'">'+(m.kind==='concern'?'Concern · '+esc(m.cat):'Message')+'</span>'+
+        '<span class="sub">'+esc(m.email)+' · '+ago(m.at)+'</span></div>'+
+      '<p style="font-size:.87rem;color:var(--w);line-height:1.68">'+esc(m.text)+'</p>'+
+      (m.reply
+        ? '<div style="margin-top:.9rem;padding:.75rem;border-radius:10px;background:rgba(61,220,151,.07);border:1px solid rgba(61,220,151,.22);font-size:.83rem;color:var(--w2);line-height:1.6"><b style="display:block;font:700 .6rem/1 var(--mono);letter-spacing:.14em;color:var(--live);margin-bottom:.35rem">YOUR REPLY</b>'+esc(m.reply)+'</div>'
+        : '<div class="fld" style="margin:.9rem 0 0"><textarea id="r_'+m.id+'" placeholder="Reply — this appears in their portal…"></textarea>'+
+          '<button class="btn sm" style="margin-top:.5rem" onclick="reply(\''+m.id+'\')">Send reply</button></div>')+
+    '</div>';
+  }).join(''):'<div class="card"><div class="empty"><b>Inbox is clear.</b>Messages and concerns raised in the client workspace land here. Try sending one from the client portal.</div></div>';
+}
+function reply(id){
+  var v=document.getElementById('r_'+id).value.trim();
+  if(!v)return toast('Write a reply first.');
+  var list=load(K.msgs,[]); var m=list.find(function(x){return x.id===id});
+  if(m){m.reply=v;m.status='Answered';save(K.msgs,list);toast('Reply sent — it is in their portal now.');renderAll()}
+}
+
+/* ── analytics ── */
+function renderAnalytics(leads,projects){
+  var won=leads.filter(function(l){return l.status==='won'});
+  var conv=leads.length?Math.round(won.length/leads.length*100):0;
+  var wonV=won.reduce(function(s,l){return s+money(l.budget)},0);
+  var avg=won.length?Math.round(wonV/won.length):0;
+
+  document.getElementById('anStats').innerHTML=[
+    ['Conversion rate',conv+'%'],['Won value','R'+wonV.toLocaleString('en-US')],
+    ['Average deal','R'+avg.toLocaleString('en-US')],['Total leads',leads.length],
+    ['Projects',projects.length]
+  ].map(function(s){return '<div class="stat"><span>'+s[0]+'</span><b>'+s[1]+'</b></div>'}).join('');
+
+  var weeks=new Array(8).fill(0);
+  leads.forEach(function(l){
+    var w=Math.floor((Date.now()-new Date(l.created_at))/(7*864e5));
+    if(w>=0&&w<8)weeks[7-w]++;
+  });
+  var mx=Math.max.apply(null,weeks.concat([1]));
+  document.getElementById('anWeeks').innerHTML=weeks.map(function(v,i){
+    return '<i style="height:'+Math.max(4,v/mx*100)+'%;animation-delay:'+(i*.05)+'s" data-v="'+v+' lead'+(v===1?'':'s')+'"></i>';
+  }).join('');
+
+  bars('anFunnel',STATUSES.map(function(s){
+    return [s.charAt(0).toUpperCase()+s.slice(1),leads.filter(function(l){return l.status===s}).length];
+  }));
+  var svc={};
+  leads.forEach(function(l){var k=SERVICES[l.service]||'Other';svc[k]=(svc[k]||0)+1});
+  bars('anServices',Object.keys(svc).map(function(k){return [k,svc[k]]}).sort(function(a,b){return b[1]-a[1]}));
+  bars('anStages',STAGES.map(function(s,i){
+    return [s,projects.filter(function(p){return p.stage===i}).length];
+  }));
+}
+function bars(id,rows){
+  var mx=Math.max.apply(null,rows.map(function(r){return r[1]}).concat([1]));
+  document.getElementById(id).innerHTML=rows.map(function(r,i){
+    return '<div class="fnl-r"><span>'+esc(r[0])+'</span><div class="fnl-b"><i style="width:0" data-w="'+(r[1]/mx*100)+'"></i></div><b>'+r[1]+'</b></div>';
+  }).join('');
+  setTimeout(function(){
+    document.querySelectorAll('#'+id+' .fnl-b i').forEach(function(el,i){
+      setTimeout(function(){el.style.width=el.dataset.w+'%'},i*70);
+    });
+  },60);
+}
+
+/* ── settings ── */
+function saveAccess(){
+  var a=auth();
+  var em=document.getElementById('setEmail').value.trim();
+  var pw=document.getElementById('setPass').value;
+  if(em)a.email=em;
+  if(pw){ if(pw.length<6)return toast('Password needs at least 6 characters.'); a.pass=pw; }
+  save(K.auth,a);
+  document.getElementById('setPass').value='';
+  toast('Access updated.');
+}
+function backup(){
+  var data={};
+  Object.keys(K).forEach(function(k){ data[K[k]]=load(K[k],null); });
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='khanya-console-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup downloaded.');
+}
+function restore(input){
+  var f=input.files[0]; if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      Object.keys(d).forEach(function(k){ if(k.indexOf('kdc_')===0)save(k,d[k]); });
+      toast('Restored.'); renderAll();
+    }catch(e){ toast('That file could not be read.'); }
+  };
+  r.readAsText(f);
+  input.value='';
+}
+function reseed(){
+  ['kdc_seeded_admin','kdc_seeded'].forEach(function(k){localStorage.removeItem(k)});
+  toast('Demo data reset — reloading.');
+  setTimeout(function(){location.reload()},700);
+}
+function exportCSV(){
+  var leads=load(K.leads,[]);
+  var head=['name','email','phone','company','service','budget','timeline','status','created_at','message'];
+  var csv=[head.join(',')].concat(leads.map(function(l){
+    return head.map(function(h){return '"'+String(l[h]==null?'':l[h]).replace(/"/g,'""')+'"'}).join(',');
+  })).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='khanya-leads-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('CSV exported.');
+}
+
+/* ── command palette ── */
+var palIdx=0;
+function pal(on){
+  document.getElementById('pal').classList.toggle('on',on);
+  if(on){ var i=document.getElementById('palIn'); i.value=''; i.focus(); palIdx=0; palRender(); }
+}
+function palItems(){
+  var out=[
+    {t:'Overview',k:'View',go:function(){show('overview')}},
+    {t:'Board',k:'View',go:function(){show('board')}},
+    {t:'Projects',k:'View',go:function(){show('projects')}},
+    {t:'Leads',k:'View',go:function(){show('leads')}},
+    {t:'Inbox',k:'View',go:function(){show('inbox')}},
+    {t:'Analytics',k:'View',go:function(){show('analytics')}},
+    {t:'Settings',k:'View',go:function(){show('settings')}},
+    {t:'Export leads as CSV',k:'Action',go:exportCSV},
+    {t:'Download backup',k:'Action',go:backup},
+    {t:'Lock console',k:'Action',go:lockUp}
+  ];
+  load(K.leads,[]).forEach(function(l){
+    out.push({t:l.name+' — '+(l.company||l.email),k:'Lead',go:function(){show('leads');openLead(l.id)}});
+  });
+  load(K.projects,[]).forEach(function(p){
+    out.push({t:p.name,k:'Project',go:function(){show('projects')}});
+  });
+  return out;
+}
+function palRender(){
+  var q=document.getElementById('palIn').value.toLowerCase();
+  var items=palItems().filter(function(i){return !q||i.t.toLowerCase().indexOf(q)>=0}).slice(0,10);
+  window.__pal=items;
+  if(palIdx>=items.length)palIdx=0;
+  document.getElementById('palList').innerHTML=items.map(function(i,n){
+    return '<div class="pal-i'+(n===palIdx?' sel':'')+'" onclick="palGo('+n+')">'+esc(i.t)+'<em>'+i.k+'</em></div>';
+  }).join('')||'<div class="pal-i" style="color:var(--w4)">Nothing matches.</div>';
+}
+function palGo(n){
+  var i=(window.__pal||[])[n];
+  if(i){ pal(false); i.go(); }
+}
+function palKey(e){
+  var items=window.__pal||[];
+  if(e.key==='ArrowDown'){palIdx=Math.min(palIdx+1,items.length-1);palRender();e.preventDefault()}
+  if(e.key==='ArrowUp'){palIdx=Math.max(palIdx-1,0);palRender();e.preventDefault()}
+  if(e.key==='Enter'){palGo(palIdx);e.preventDefault()}
+}
+addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); pal(true); }
+  if(e.key==='Escape'){ pal(false); drawer(false); }
+});
+
+/* ── toast ── */
+var tT;
+function toast(m){
+  var t=document.getElementById('toast');
+  t.textContent=m; t.classList.add('on');
+  clearTimeout(tT); tT=setTimeout(function(){t.classList.remove('on')},3400);
+}
+</script>
+</body>
+</html>

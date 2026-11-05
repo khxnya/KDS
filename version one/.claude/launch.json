@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "concept", "runtimeExecutable": "python", "runtimeArgs": ["-m","http.server","5599","--directory","concept"], "port": 5599 }
+  ]
+}

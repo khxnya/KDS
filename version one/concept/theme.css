@@ -1,0 +1,167 @@
+/* ══════════════════════════════════════════════════════════════════
+   KHANYA DIGITAL — KINETIC SYSTEM v3  ·  shared design tokens
+   Concept: navy is the dark. Gold is the light. Blue is the system.
+   ══════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  /* ── surfaces ── */
+  --ink:#05090f;        --ink2:#080f1b;       --ink3:#0d1728;      --ink4:#132135;
+  --paper:#f5f2eb;      --paper2:#ebe6dc;     --paper-ink:#0b1420;
+
+  /* ── brand ── */
+  --gold:#ffb638;       --gold2:#ffd88a;      --gold-dim:rgba(255,182,56,.13);
+  --blue:#3d82e8;       --blue2:#7db4ff;      --blue-dim:rgba(61,130,232,.13);
+  --live:#3ddc97;       --warn:#ff8a5c;
+
+  /* ── type ── */
+  --w:#eaf1fa;  --w2:#a9bed4;  --w3:#65809b;  --w4:#3d556e;
+  --glass:rgba(255,255,255,.045); --glass2:rgba(255,255,255,.08); --gb:rgba(255,255,255,.10);
+
+  --dis:'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --ui:'Inter', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  /* ── motion ── */
+  --ease:cubic-bezier(.22,.9,.28,1);
+  --pop:cubic-bezier(.34,1.4,.52,1);
+  --nav-h:64px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overflow-x:clip}
+body{font-family:var(--ui);background:var(--ink);color:var(--w);overflow-x:hidden;line-height:1.6;
+     -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--gold);color:#0b0b0b}
+a{color:inherit}
+img{max-width:100%;display:block}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--ink2)}
+::-webkit-scrollbar-thumb{background:#1d3049;border-radius:20px;border:2px solid var(--ink2)}
+::-webkit-scrollbar-thumb:hover{background:#2b466a}
+
+/* ══ KINETIC PRIMITIVES ══════════════════════════════════════════ */
+
+/* Every hidden-until-revealed rule is gated on html.js, which an inline
+   snippet in <head> sets. If JS never runs, the page is simply static
+   and fully visible — motion is an enhancement, never a prerequisite. */
+
+/* 1 · mask reveal — content wipes up from behind an invisible edge */
+.k{display:block;overflow:hidden}
+.js .k>*{display:block;transform:translateY(105%);opacity:0;
+     transition:transform .95s var(--ease),opacity .7s ease}
+.js .k.in>*{transform:none;opacity:1}
+
+/* 2 · child stagger */
+.js [data-stag]>*{opacity:0;transform:translateY(24px);
+   transition:opacity .6s ease,transform .7s var(--ease)}
+.js [data-stag].in>*{opacity:1;transform:none}
+[data-stag].in>*:nth-child(1){transition-delay:.03s}
+[data-stag].in>*:nth-child(2){transition-delay:.10s}
+[data-stag].in>*:nth-child(3){transition-delay:.17s}
+[data-stag].in>*:nth-child(4){transition-delay:.24s}
+[data-stag].in>*:nth-child(5){transition-delay:.31s}
+[data-stag].in>*:nth-child(6){transition-delay:.38s}
+[data-stag].in>*:nth-child(7){transition-delay:.45s}
+[data-stag].in>*:nth-child(8){transition-delay:.52s}
+
+/* 3 · generic reveal */
+.js [data-rev]{opacity:0;transform:translateY(34px);
+   transition:opacity .8s ease,transform .9s var(--ease)}
+.js [data-rev="l"]{transform:translateX(-38px)}
+.js [data-rev="r"]{transform:translateX(38px)}
+.js [data-rev="s"]{transform:scale(.95);filter:blur(6px);
+   transition:opacity .8s ease,transform .9s var(--ease),filter .8s ease}
+.js [data-rev].in{opacity:1;transform:none;filter:none}
+/* On narrow screens a 38px sideways slide both feels cramped and pushes
+   the layout past the viewport mid-animation. Reveal upward instead. */
+@media(max-width:700px){
+  .js [data-rev="l"],.js [data-rev="r"]{transform:translateY(28px)}
+}
+
+/* 4 · the beam — a bar of light that draws itself left to right */
+.beam{height:1px;background:var(--gb);position:relative;overflow:hidden}
+.beam::after{content:'';position:absolute;inset:0;transform:scaleX(0);transform-origin:left;
+  background:linear-gradient(90deg,var(--gold),var(--blue) 60%,transparent);
+  transition:transform 1.1s var(--ease) .1s}
+.beam.in::after{transform:scaleX(1)}
+
+/* 5 · light sweep behind a word — khanya = light */
+.lit{position:relative;color:var(--gold);display:inline-block;z-index:0}
+.lit::after{content:'';position:absolute;left:-6%;right:-6%;bottom:.05em;height:.30em;z-index:-1;
+  background:linear-gradient(90deg,rgba(255,182,56,.34),rgba(255,182,56,.05));
+  transform:scaleX(0);transform-origin:left;border-radius:2px;
+  transition:transform .85s var(--ease) .4s}
+.k.in .lit::after,.in .lit::after{transform:scaleX(1)}
+
+/* 6 · tactile buttons */
+.btn{--bg:var(--gold);--fg:#12100a;
+  display:inline-flex;align-items:center;gap:.55rem;padding:.85rem 1.6rem;border:none;cursor:pointer;
+  background:var(--bg);color:var(--fg);border-radius:999px;font:700 .84rem/1 var(--ui);
+  text-decoration:none;position:relative;overflow:hidden;isolation:isolate;white-space:nowrap;
+  transition:transform .35s var(--pop),box-shadow .35s ease}
+.btn::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--gold2);
+  transform:translateY(101%);transition:transform .45s var(--ease)}
+.btn:hover::before{transform:none}
+.btn:hover{transform:translateY(-3px);box-shadow:0 14px 34px -10px rgba(255,182,56,.5)}
+.btn:active{transform:translateY(-1px) scale(.985)}
+.btn .ar{transition:transform .35s var(--pop)}
+.btn:hover .ar{transform:translateX(4px)}
+.btn.gh{--bg:transparent;--fg:var(--w);border:1px solid var(--gb);backdrop-filter:blur(8px)}
+.btn.gh::before{background:var(--glass2)}
+.btn.gh:hover{border-color:rgba(255,182,56,.45);box-shadow:0 14px 34px -14px rgba(0,0,0,.7)}
+.btn.blu{--bg:var(--blue);--fg:#fff}
+.btn.blu::before{background:var(--blue2)}
+.btn.blu:hover{box-shadow:0 14px 34px -10px rgba(61,130,232,.5)}
+.btn.sm{padding:.62rem 1.15rem;font-size:.76rem}
+
+/* 7 · tilt card */
+.tilt{transition:transform .5s var(--ease),box-shadow .5s ease;
+      transform-style:preserve-3d;will-change:transform}
+
+/* 8 · eyebrow */
+.ey{display:inline-flex;align-items:center;gap:.5rem;font:700 .63rem/1 var(--mono);
+  letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.ey::before{content:'';width:16px;height:1px;background:var(--gold);flex:none}
+.ey.b{color:var(--blue2)}.ey.b::before{background:var(--blue2)}
+
+.num{font-family:var(--dis);font-variant-numeric:tabular-nums}
+
+h1,h2,h3,h4{font-family:var(--dis);font-weight:700;letter-spacing:-.03em;line-height:1.02}
+.h-xl{font-size:clamp(2.5rem,7.2vw,6.2rem)}
+.h-lg{font-size:clamp(1.95rem,4.5vw,3.5rem);line-height:1.05}
+.h-md{font-size:clamp(1.35rem,2.6vw,2.05rem);line-height:1.14;letter-spacing:-.025em}
+.lead{font-size:clamp(.97rem,1.5vw,1.13rem);color:var(--w2);max-width:60ch;line-height:1.72}
+
+.tag{display:inline-flex;align-items:center;gap:.4rem;padding:.32rem .7rem;border-radius:999px;
+  border:1px solid var(--gb);background:var(--glass);font:600 .64rem/1 var(--mono);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--w2)}
+.tag.g{border-color:rgba(255,182,56,.3);background:var(--gold-dim);color:var(--gold)}
+.tag.b{border-color:rgba(61,130,232,.32);background:var(--blue-dim);color:var(--blue2)}
+.tag.l{border-color:rgba(61,220,151,.3);background:rgba(61,220,151,.1);color:var(--live)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;
+  animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,220,151,.5)}
+  70%{box-shadow:0 0 0 7px rgba(61,220,151,0)}100%{box-shadow:0 0 0 0 rgba(61,220,151,0)}}
+
+.sec{padding:clamp(4.5rem,9vw,8.5rem) clamp(1.25rem,6vw,5.5rem);position:relative}
+.wrap{max-width:1280px;margin:0 auto}
+.sec-n{position:absolute;top:clamp(2rem,4vw,3.4rem);right:clamp(1.25rem,6vw,5.5rem);
+  font:700 .68rem/1 var(--mono);letter-spacing:.2em;color:var(--w4)}
+
+.card{background:linear-gradient(160deg,var(--glass),rgba(255,255,255,.015));
+  border:1px solid var(--gb);border-radius:16px;padding:1.5rem;position:relative;overflow:hidden;
+  transition:border-color .4s,transform .5s var(--ease),background .4s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,182,56,.55),transparent);
+  transform:scaleX(0);transition:transform .6s var(--ease)}
+.card:hover::before{transform:scaleX(1)}
+.card:hover{border-color:rgba(255,182,56,.28);transform:translateY(-5px)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .k>*,[data-rev],[data-stag]>*{opacity:1!important;transform:none!important;filter:none!important}
+  .beam::after,.lit::after{transform:scaleX(1)!important}
+}
