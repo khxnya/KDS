@@ -238,8 +238,8 @@
       <button class="btn go" onclick="login()">Sign in<span class="ar">→</span></button>
       <div class="au-links"><a onclick="pane('fp')">Forgot password?</a><a onclick="pane('up',document.querySelectorAll('.au-tab')[1])">Create an account</a></div>
       <div class="au-hint">
-        <b>Demo access</b> — client: <b>demo@client.co.za</b> / <b>demo1234</b><br>
-        Owner console: <b>hello@khanyadigital.co.za</b> / <b>khanya2026</b>
+        <b>Local demo access</b> — client: <b>client@test.com</b> / <b>Testing1234!</b><br>
+        Owner console: <b>owner@test.com</b> / <b>Testing1234!</b>
       </div>
     </div>
 
@@ -384,26 +384,40 @@ var K={
   clients:'kdc_clients', session:'kdc_session', projects:'kdc_projects',
   msgs:'kdc_msgs', rating:'kdc_rating', seeded:'kdc_seeded'
 };
-var OWNER_EMAILS=['hello@khanyadigital.co.za','khanya'];
-var OWNER_PASS='khanya2026';
+var OWNER_EMAILS=['owner@test.com','khanya'];
+var OWNER_PASS='Testing1234!';
 
 function load(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch(e){ return d; } }
 function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 
 /* ── demo seed ── */
 (function seed(){
-  if(load(K.seeded,false))return;
   var clients=load(K.clients,[]);
-  if(!clients.some(function(c){return c.email==='demo@client.co.za'}))
-    clients.push({name:'Demo Client',email:'demo@client.co.za',pass:'demo1234',phone:'+27 82 000 0000'});
+  clients.forEach(function(c){
+    if(c.email==='demo@client.co.za')c.email='client@test.com';
+    if(c.email==='client@test.com'&&c.pass==='demo1234')c.pass='Testing1234!';
+  });
+  if(load(K.seeded,false)){
+    save(K.clients,clients);
+    var existingProjects=load(K.projects,[]);
+    existingProjects.forEach(function(p){if(p.email==='demo@client.co.za')p.email='client@test.com';});
+    save(K.projects,existingProjects);
+    var existingMsgs=load(K.msgs,[]);
+    existingMsgs.forEach(function(m){if(m.email==='demo@client.co.za')m.email='client@test.com';});
+    save(K.msgs,existingMsgs);
+    return;
+  }
+  if(!clients.some(function(c){return c.email==='client@test.com'}))
+    clients.push({name:'Demo Client',email:'client@test.com',pass:'Testing1234!',phone:'+27 82 000 0000'});
   save(K.clients,clients);
 
   /* Merge, never clobber — the owner console seeds its own projects and
      whichever surface loads first must not wipe the other's data. */
   var projects=load(K.projects,[]);
+  projects.forEach(function(p){if(p.email==='demo@client.co.za')p.email='client@test.com';});
   var demo={
     id:'P1', name:'Harvest Homes — website & lead routing', client:'Demo Client',
-    email:'demo@client.co.za', stage:2, budget:'R14,500', started:'2026-02-02',
+    email:'client@test.com', stage:2, budget:'R14,500', started:'2026-02-02',
     launch:'14 March 2026', daysInStage:3,
     now:'Copy and imagery pass across the listings pages.',
     next:'A walkthrough call with you before we move to final review.',
@@ -425,14 +439,16 @@ function save(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} 
      console already touched would resurrect copy they deliberately changed. */
   if(!projects.some(function(p){return p.id==='P1'})){
     projects.unshift(demo);
-    save(K.projects,projects);
   }
+  save(K.projects,projects);
 
   var msgs=load(K.msgs,[]);
+  msgs.forEach(function(m){if(m.email==='demo@client.co.za')m.email='client@test.com';});
   if(!msgs.length)save(K.msgs,[
-    {id:'M1',email:'demo@client.co.za',kind:'msg',cat:'',text:'Can we swap the hero photo on the Buy page for the aerial shot?',at:'2026-02-25T09:12:00',reply:'Done — swapped and pushed to staging. Have a look and tell me if the crop works on mobile.',status:'Answered'},
-    {id:'M2',email:'demo@client.co.za',kind:'msg',cat:'',text:'What do you need from me before launch?',at:'2026-02-20T16:40:00',reply:'Just two things: final agent bios, and confirmation of the phone number for the enquiry routing.',status:'Answered'}
+    {id:'M1',email:'client@test.com',kind:'msg',cat:'',text:'Can we swap the hero photo on the Buy page for the aerial shot?',at:'2026-02-25T09:12:00',reply:'Done — swapped and pushed to staging. Have a look and tell me if the crop works on mobile.',status:'Answered'},
+    {id:'M2',email:'client@test.com',kind:'msg',cat:'',text:'What do you need from me before launch?',at:'2026-02-20T16:40:00',reply:'Just two things: final agent bios, and confirmation of the phone number for the enquiry routing.',status:'Answered'}
   ]);
+  else save(K.msgs,msgs);
   save(K.seeded,true);
 })();
 

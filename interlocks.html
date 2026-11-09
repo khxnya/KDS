@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khanya Digital — KD Interlock Series</title>
+<style>
+  :root{--bg:#06101e;--card:#0a1526;--line:rgba(255,255,255,.07);--w:#eef2f8;--grey:#8fa0b8;--blue:#3d82e8;--blue2:#6aaaf5;--navy:#1f4fae;--gold:#e8b64c;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--w);font-family:'Segoe UI',system-ui,sans-serif;padding:3rem 5% 5rem}
+  header{text-align:center;margin-bottom:3rem}
+  header h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-.02em}
+  header h1 em{font-style:normal;color:var(--blue2)}
+  header p{color:var(--grey);font-size:.85rem;margin-top:.5rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1.1rem;max-width:1350px;margin:0 auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.5rem 1rem 1.1rem;display:flex;flex-direction:column;align-items:center;gap:.9rem;transition:.3s;position:relative}
+  .card:hover{transform:translateY(-5px);border-color:rgba(61,130,232,.45);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+  .num{position:absolute;top:.75rem;left:.85rem;font-family:monospace;font-size:.6rem;font-weight:800;letter-spacing:.15em;color:var(--grey)}
+  .logo{width:140px;height:140px;display:flex;align-items:center;justify-content:center}
+  .logo svg{width:100%;height:250%}
+  .name{font-size:.78rem;font-weight:800}
+  .desc{font-size:.64rem;color:var(--grey);text-align:center;line-height:1.5;margin-top:-.4rem}
+  footer{text-align:center;color:var(--grey);font-size:.72rem;margin-top:3rem;line-height:1.8}
+</style>
+</head>
+<body>
+<header>
+  <h1>KD <em>Interlock Series</em></h1>
+  <p>2 interlocking K + D monogram concepts : plain to abstract</p>
+</header>
+
+<div class="grid">
+
+
+<!-- 1 -->
+<div class="card"><span class="num">1</span>
+<div class="logo"><svg viewBox="0 0 100 100">
+<path d="M50 14 L86 50 L50 86 L14 50 Z" fill="none" stroke="#1f4fae" stroke-width="5" stroke-linejoin="round"/>
+<path d="M38 34 V66 M38 50 L56 34 M43 51 L56 66" stroke="#6aaaf5" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+<path d="M60 37 a15 15 0 0 1 0 26" fill="none" stroke="#e8b64c" stroke-width="6.5" stroke-linecap="round"/>
+</svg></div>
+<span class="name">Kite</span>
+<p class="desc">Interlock inside a rotated square — nods to the original diamond, evolved.</p>
+</div>
+
+<!-- 2 -->
+<div class="card"><span class="num">2</span>
+<div class="logo"><svg viewBox="0 0 100 100">
+<g transform="rotate(-8 50 50)">
+<path d="M30 22 V78" stroke="#3d82e8" stroke-width="10" stroke-linecap="round"/>
+<path d="M30 50 L56 26 M38 50 L56 74" stroke="#3d82e8" stroke-width="10" stroke-linecap="round"/>
+<path d="M56 26 a25 25 0 0 1 0 48" fill="none" stroke="#e8b64c" stroke-width="10" stroke-linecap="round"/>
+</g>
+</svg></div>
+<span class="name">Tilt</span>
+<p class="desc">The lock leaning forward — momentum without motion graphics.</p>
+</div>
+
+</div>
+</body>
+</html>

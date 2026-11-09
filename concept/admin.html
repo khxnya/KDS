@@ -265,11 +265,11 @@ td .em{font-size:.75rem;color:var(--w4)}
     <span class="tag g" style="margin-bottom:1rem">Restricted</span>
     <h1>Owner <em>console</em></h1>
     <p>Leads, projects, pipeline and analytics — the operating view for Khanya Digital.</p>
-    <div class="fld"><label>Email</label><input type="email" id="lkEmail" placeholder="hello@khanyadigital.co.za" autocomplete="username"></div>
+    <div class="fld"><label>Email</label><input type="email" id="lkEmail" placeholder="owner@test.com" autocomplete="username"></div>
     <div class="fld"><label>Password</label><input type="password" id="lkPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')unlock()"></div>
     <button class="btn" style="width:100%;justify-content:center" onclick="unlock()">Unlock console<span class="ar">→</span></button>
     <div class="lk-err" id="lkErr"></div>
-    <div class="lk-hint">Concept demo — <b>hello@khanyadigital.co.za</b> / <b>khanya2026</b></div>
+    <div class="lk-hint">Local concept demo — <b>owner@test.com</b> / <b>Testing1234!</b></div>
     <div style="margin-top:1.1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;font-size:.76rem">
       <a href="client.html" style="color:var(--w4);text-decoration:none">Client portal</a>
       <a href="index.html" style="color:var(--w4);text-decoration:none">← Back to the site</a>
@@ -522,7 +522,7 @@ function ago(iso){
      richer fields, and whichever surface loads first must not wipe it. */
   var existing=load(K.projects,[]);
   [
-    {id:'P1',name:'Harvest Homes — website & lead routing',client:'Harvest Homes',email:'demo@client.co.za',
+    {id:'P1',name:'Harvest Homes — website & lead routing',client:'Harvest Homes',email:'client@test.com',
      budget:'R 14,500',stage:2,launch:'14 March 2026',notes:'Waiting on final agent bios.',created_at:d(28)},
     {id:'P2',name:'Peak Fitness — class timetable site',client:'Peak Fitness',email:'ayanda@peakfit.co.za',
      budget:'R 11,000',stage:4,notes:'Live since Feb. Care plan active.',created_at:d(52)},
@@ -537,7 +537,13 @@ function ago(iso){
 
 /* ══ lock ══ */
 Kinetic.lightField(document.getElementById('lockField'));
-function auth(){ return load(K.auth,{email:'hello@khanyadigital.co.za',pass:'khanya2026'}); }
+function auth(){
+  var a=load(K.auth,{email:'owner@test.com',pass:'Testing1234!'});
+  if(a.email==='hello@khanyadigital.co.za')a.email='owner@test.com';
+  if(a.pass==='khanya2026')a.pass='Testing1234!';
+  save(K.auth,a);
+  return a;
+}
 function unlock(){
   var a=auth();
   var em=document.getElementById('lkEmail').value.trim().toLowerCase();

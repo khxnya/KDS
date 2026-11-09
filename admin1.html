@@ -335,7 +335,7 @@
     <h1>OWNER <span class="hl-b">ACCESS</span></h1>
     <div class="lock-div"></div>
     <p>This console is restricted to the owner of Khanya Digital.</p>
-    <input type="email" id="emailIn" placeholder="Owner email" autocomplete="username" style="margin-bottom:.6rem" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <input type="email" id="emailIn" placeholder="owner@test.com (local demo)" autocomplete="username" style="margin-bottom:.6rem" onkeydown="if(event.key==='Enter')tryUnlock()">
     <input type="password" id="passIn" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')tryUnlock()">
     <button onclick="tryUnlock()">Unlock Dashboard</button>
     <div class="lock-err" id="lockErr"></div>
@@ -570,14 +570,19 @@ if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventL
 applyTheme();
 
 /* ═══════════ AUTH ═══════════ */
-function PASS(){return localStorage.getItem('kd_pass')||'khanya2026'}
+function PASS(){
+  var saved=localStorage.getItem('kd_pass');
+  if(saved==='khanya2026'){localStorage.setItem('kd_pass','Testing1234!');return 'Testing1234!'}
+  return saved||'Testing1234!';
+}
 function unlockUI(){$('lock').classList.add('off');$('app').classList.add('on');boot();syncLeads();syncProjects()}
 function shakeLock(){var c=$('lockCard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake')}
 async function tryUnlock(){
   var pw=$('passIn').value;
   var em=($('emailIn')?$('emailIn').value:'').trim();
   /* preferred: real login via Supabase Auth (secure, works across devices) */
-  if(window.__sb && em){
+  var localDemo=em.toLowerCase()==='owner@test.com';
+  if(window.__sb && em && !localDemo){
     $('lockErr').textContent='Checking…';
     try{
       var r=await window.__sb.auth.signInWithPassword({email:em,password:pw});
@@ -585,9 +590,9 @@ async function tryUnlock(){
       sessionStorage.setItem('kd_owner','1');$('lockErr').textContent='';unlockUI();return;
     }catch(e){$('lockErr').textContent='Login failed — check your connection.';return;}
   }
-  /* offline fallback: local passcode (used only if no email is entered) */
-  if(pw===PASS()){sessionStorage.setItem('kd_owner','1');unlockUI()}
-  else{$('lockErr').textContent='Enter your owner email and password.';shakeLock()}
+  /* offline test login; client-side passcodes are not deployment security */
+  if((localDemo||!em)&&pw===PASS()){sessionStorage.setItem('kd_owner','1');unlockUI()}
+  else{$('lockErr').textContent='Use the local demo login or your configured owner account.';shakeLock()}
 }
 function lockUp(){try{if(window.__sb)window.__sb.auth.signOut()}catch(e){}sessionStorage.removeItem('kd_owner');localStorage.removeItem('kd_owner_persist');location.reload()}
 
@@ -603,7 +608,7 @@ function seed(){
   if(localStorage.getItem('kd_seeded_v2'))return;
   if(projects().length===0){
     save('kd_projects',[
-      {id:'P1',name:'Bloom Florist Website',client:'Bloom Florist',budget:'R 8,500',email:'demo@client.co.za',stage:3,notes:'Final copy approved. Awaiting domain transfer.',demo:true,created:new Date(Date.now()-20*864e5).toISOString(),stageAt:new Date(Date.now()-4*864e5).toISOString()},
+      {id:'P1',name:'Bloom Florist Website',client:'Bloom Florist',budget:'R 8,500',email:'client@test.com',stage:3,notes:'Final copy approved. Awaiting domain transfer.',demo:true,created:new Date(Date.now()-20*864e5).toISOString(),stageAt:new Date(Date.now()-4*864e5).toISOString()},
       {id:'P2',name:'Peak Fitness — Site + Booking Flow',client:'Peak Fitness',budget:'R 14,000',stage:1,notes:'Homepage build in progress. Booking automation next.',demo:true,created:new Date(Date.now()-9*864e5).toISOString()},
       {id:'P3',name:'Harvest Table Menu Site',client:'Harvest Table',budget:'R 6,200',stage:4,notes:'Live since June. Monthly care plan active.',demo:true,created:new Date(Date.now()-60*864e5).toISOString()}
     ]);
