@@ -1,0 +1,19 @@
+{
+ "name": "khanya-digital-studio",
+ "version": "6.0.0",
+ "private": true,
+ "description": "Khanya Digital Studio website, client portal, owner console and developer workspace",
+ "scripts": {
+  "check": "node scripts/check.cjs",
+  "test": "node tests/platform.cjs && node tests/team.cjs",
+  "build": "npm run check && node scripts/build.cjs",
+  "dev": "python3 -m http.server 8000"
+ },
+ "devDependencies": {
+  "@electric-sql/pglite": "0.5.16",
+  "jsdom": "31.0.0"
+ },
+ "engines": {
+  "node": ">=25"
+ }
+}
