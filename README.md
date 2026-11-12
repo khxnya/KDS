@@ -13,7 +13,7 @@ Automation and application development are planned capabilities, currently in de
 
 ## What this project contains
 
-A buildless public website, client portal, owner console and assigned-work developer portal. Revision 6 adds consistent dropdown styling and focus states across all four interfaces, a discreet public Studio Access chooser, a personalised developer home with permitted recent activity, reliable Kite/Tilt interlock controls, more restrained viewport motion and revised Studio Identity and 3D service language. The supplied project remains the foundation: existing project stages, lead handling, inbox replies, analytics, account updates and exports are retained. The public website presents the services, studio approach, collaboration invitation and clearly labelled self-initiated work. No commercial clients, testimonials, outcomes, prices or performance claims have been invented.
+A buildless public website, client portal, owner console and assigned-work developer portal. Revision 8 completes the Kite/Tilt identity interaction, balances Studio Access, adds the developer welcome panel, removes repeated greetings, introduces persistent notification quick/full views, connects project conversations with owner oversight, signs users out on explicit workspace exit, supports private profile images and adds branded XLSX reporting. The supplied project remains the foundation: existing project stages, lead handling, team jobs, inbox replies, analytics and account updates are retained. The public website presents the services, studio approach, collaboration invitation and clearly labelled self-initiated work. No commercial clients, testimonials, outcomes, prices or performance claims have been invented.
 
 ```text
 index.html             Home, Services, Work, Studio and Contact hash routes
@@ -24,6 +24,18 @@ team.js                Team forms, checkpoints, private uploads and client progr
 kinetic.js             Motion, provider authentication and REST integration
 v6.js                  Shared controls, Studio Access, interlocks, motion and copy refinements
 v6.css                 Shared dropdown, access, animation and developer-home styling
+v7.js                  Notifications, project messages, account names and RAY refinements
+v7.css                 Shared notification, message and settings styling
+collaboration.sql       Additive project-message/notification tables, functions and RLS
+v8-public.js/css        Identity, Studio Access, developer welcome, RAY and control polish
+v8-workspace.js/css     Notification centre and authorised project-conversation interfaces
+v8-session.js           Session exit/revalidation, loading, owner clock and profile image flow
+v8-export.js            Owner reporting/snapshot actions
+xlsx.js                 Dependency-free branded XLSX workbook generator
+favicon.svg             Local KD browser icon
+production-v8.sql       Additive profiles, messages, notifications, audit, Storage and RLS migration
+PRODUCTION-V8.md        Exact revision 8 database, Edge Function and deployment handover
+supabase/functions/     Server-side contact delivery function; secrets stay in Supabase
 config.js              Your existing PUBLIC settings; preserve when updating
 config.example.js      Blank public-settings template for a fresh installation
 setup.html             Browser-only helper to preserve existing public settings
@@ -31,7 +43,7 @@ README.md              Setup, security, media, verification and handover
 package.json           Optional developer checks, tests and build commands
 package-lock.json      Reproducible developer dependencies
 scripts/check.cjs      Embedded JavaScript, IDs and asset checks
-scripts/build.cjs      Copy static production files to dist/
+scripts/build.cjs      Build static dist/ output and a credential-free release/ handover
 scripts/configure.py   Generate public config from environment variables
 tests/platform.cjs     DOM and mocked-provider regression suite
 database.sql           Base workspace schema and RLS for a new installation
@@ -39,25 +51,30 @@ team.sql               Additive team tables, RPCs, RLS and private file bucket
 TEAM-SETUP.md          Upgrade and Supabase team setup, explained step by step
 tests/team.cjs         Assigned-work UI and PostgreSQL RLS integration checks
 tests/team-db.cjs      Local PostgreSQL fixture with simulated Auth/Storage
+tests/v8-db.cjs        Revision 8 function, RLS and event integration checks
+tests/xlsx.cjs         XLSX structure, styling and formula-safety checks
+tests/v8-public.cjs    Studio Access, Kite/Tilt and RAY regression checks
+tests/v8-session.cjs   Protected exit, loading and session-state checks
+tests/v8-workspace.cjs Notification, chat and role-settings regression checks
 ```
 
 HTML contains its own CSS and small page-specific interaction modules. The shared runtime handles authentication and persistence. The production pages have no framework, remote font, CDN library or npm runtime dependency. Local/system fallbacks are used for the original Space Grotesk / Inter / JetBrains Mono stacks; exact font files were not supplied. Newly created visual studies use CSS/SVG. Supplied KD interlock geometry is retained as an internal identity study, not presented as client work.
 
 ## Upgrade from the previous working files
 
-Revision 6 builds on the working revision 5 project. **Keep your currently configured config.js.** The primary v6 download intentionally contains config.example.js instead of config.js, so extracting it will not blank your working connection.
+Revision 8 builds on the working revision 7 project. **Keep your currently configured config.js.** The handover bundle contains `config.example.js` rather than the working configuration, so extracting it cannot silently blank the existing connection.
 
-1. Back up your current files and database.
-2. Keep config.js beside the new index.html, client.html, admin.html, developer.html, kinetic.js, team.js, v6.js and v6.css. Upload those eight revised application files together. Existing account passwords and owner authenticator setup remain unchanged.
-3. If team.sql is already installed and the `kds_team`, `kds_jobs`, `kds_job_updates` and `kds_job_assets` tables exist, this design revision needs no new SQL. For a working pre-team installation, read [TEAM-SETUP.md](TEAM-SETUP.md), review/test team.sql against a staging copy, then run it in the intended Supabase project's SQL Editor. database.sql remains the base schema for a new installation.
-4. Hard-refresh or clear the affected HTML/JS URLs from your host/CDN. Open admin.html#team and refresh the team workspace.
-5. Create/confirm a separate colleague Auth account, then add it under Team & jobs. The colleague signs in at developer.html after signing out of any prior account session.
+1. Back up the current files and Supabase data, then test the change in a staging project with representative, non-sensitive records.
+2. Upload the four HTML pages and every shared file from `kinetic.js` through the `v8-*` modules and `xlsx.js` together. Keep the configured `config.js` beside them.
+3. If `database.sql`, `team.sql` and `collaboration.sql` are already installed, run only `production-v8.sql`. A new installation uses all four in that order. The revision 8 migration is additive and creates no demonstration activity.
+4. Deploy the `contact-submit` Edge Function and set its server-side secrets if persisted contact delivery and owner enquiry notifications are required.
+5. Clear cached HTML/JavaScript, sign in separately as owner, developer and client, and complete the isolation checks in [PRODUCTION-V8.md](PRODUCTION-V8.md).
 
-Until team.sql is installed, existing client/owner workflows keep working. The Team tab reports that setup is missing and the client progress area remains hidden. The working Supabase connection is shared by all portals; there is no new key to generate. No live database records, accounts, passwords, roles or provider settings were changed during development.
+The working Supabase public URL/key is shared by all portals; revision 8 does not require another browser key. Existing account passwords and owner authenticator setup remain with Supabase. No live database records, accounts, passwords, roles or provider settings are changed simply by downloading or building these files.
 
-For a new installation only: copy config.example.js to config.js, fill the public settings, run database.sql first and team.sql second. On an older pre-v4 installation, follow the base authentication/schema migration instructions before the team migration. setup.html can extract existing public settings from the previously configured kinetic.js or config.js locally without executing or uploading it. Never replace a configured file with an empty template.
+For a new installation, copy `config.example.js` to `config.js`, enter only public browser settings, and follow [PRODUCTION-V8.md](PRODUCTION-V8.md). `setup.html` can preserve existing public settings locally. Never replace a configured file with an empty template.
 
-Rollback restores a compatible file set. Leave team tables and uploads intact when reverting a design update; do not delete production data. The base policies also exclude developer accounts; retain that condition if you maintain older SQL files.
+Rollback restores a compatible application bundle. Leave database tables and Storage objects intact when reverting visual code; do not drop production data to roll back a frontend release.
 
 ## Public configuration and environment variables
 
@@ -67,11 +84,12 @@ Edit config.js:
 window.KDS_CONFIG = {
   supabaseUrl: 'https://YOUR_PROJECT_REF.supabase.co',
   supabaseAnonKey: 'YOUR_PUBLIC_PUBLISHABLE_OR_ANON_KEY',
-  enquiryEndpoint: 'https://YOUR_SERVER/enquiry'
+  enquiryEndpoint: 'https://YOUR_SERVER/enquiry',
+  web3FormsAccessKey: 'YOUR_WEB3FORMS_ACCESS_KEY'
 };
 ```
 
-Leave enquiryEndpoint empty only when enquiries should use the displayed email route instead of online submission. An empty endpoint never produces a false success. A renamed Supabase display name does not change its project reference URL.
+For production revision 8, set `enquiryEndpoint` to the deployed Supabase `contact-submit` Edge Function and leave `web3FormsAccessKey` empty. Keep the Web3Forms key in Supabase Function secrets so accepted enquiries can be recorded and notify the owner. Direct browser Web3Forms submission remains a limited fallback when no endpoint is configured; restrict any browser key to the live domain. It cannot create a trusted database notification. A renamed Supabase display name does not change its project reference URL.
 
 Only the publishable/anon key is suitable for the browser. Never put secret/service_role keys in JavaScript. The runtime and setup helper reject recognised service-role/secret-key forms; that check is not a substitute for RLS. Public configuration is intentionally public. Server mail-provider credentials and service-role keys belong exclusively in your backend environment.
 
@@ -111,13 +129,13 @@ npm run build
 npm run dev
 ```
 
-The build command copies nine production files to dist/: the four HTML pages, kinetic.js, team.js, v6.js, v6.css and your configured config.js. Upload dist/ to your static host using its normal deployment process. setup.html, SQL files, guides and test tooling are development resources and do not need public hosting. No local demo password or demo account is included in the application.
+The build command recreates two directories. `dist/` contains the complete static application and the local `config.js` when present. Upload its contents to the static host. `release/` is a credential-free handover containing `config.example.js`, all revision 8 modules, migrations, documentation and Edge Function source. Do not publicly host migrations or setup guides merely because they are included in the handover. No local demonstration password or account is included.
 
 The platform tests use jsdom and a mocked provider. Team tests also execute the shipped SQL, functions and RLS in local embedded PostgreSQL (PGlite), with simulated Supabase Auth claims and Storage schemas. No production connection is made. Test account/password fixtures are fictional and are never accepted by the application itself. They are not accounts to create in production.
 
 ## Routes, onboarding and owner access
 
-Public routes: index.html#home, #services, #work, #studio, #contact and the discreet #access workspace chooser. Public Login links to client.html. Public Get started opens the project enquiry. Studio Access offers clear routes to the client, colleague and owner interfaces; it does not grant access or replace authentication. The client page has separate Login and Get started actions: Login uses an existing account; Get started creates a workspace account. Account creation does not purchase a service or automatically start a project. Recovery and onboarding include a return-to-Login route.
+Public routes: index.html#home, #services, #work, #studio, #contact and the discreet #access workspace chooser. Public Login links to client.html. Public Get started opens the project enquiry. Studio Access offers colleague and owner routes only; clients use their dedicated Login destination. The chooser does not grant access or replace authentication. The client page has separate Login and Get started actions: Login uses an existing account; Get started creates a workspace account. Account creation does not purchase a service or automatically start a project. Recovery and onboarding include a return-to-Login route.
 
 Clients use client.html and its Overview, Messages and Account sections. Overview includes the assigned project, recorded activity and file metadata. Messaging combines normal messages with a discreet priority-concern disclosure. Account changes use the authentication provider. The previous redundant connected-workspace strip and rating UI are removed.
 
@@ -185,6 +203,10 @@ It retains records and does not replace your production database. Back up and te
 
 Multiple related REST writes (for example project conversion and separate private notes) are not atomic transactions. Production workflows that need atomicity should be moved into validated database functions. The JSON schema is intentionally compatible with the existing project and is not a full business-domain schema. The team feature adds private uploads and short-lived signed URLs through separately guarded tables/functions; general user administration is still handled through trusted Supabase administration.
 
+Revision 8 adds `production-v8.sql` after the three earlier migrations. It provides account profiles, persistent per-recipient notifications, message receipts, guarded project-conversation RPCs, contact/agreement event hooks, owner-visible audit records and a private profile-image bucket. Notifications and conversations are added to the Supabase Realtime publication, while the interface retains refresh/polling recovery when a connection is interrupted. The migration replaces named `kds_*` functions, triggers and policies but does not delete business rows or insert fictional activity. Exact deployment and isolation checks are in [PRODUCTION-V8.md](PRODUCTION-V8.md).
+
+Agreement records and completion notifications form a backend foundation only. A legally reviewed signing provider or trusted server callback must verify completion before calling the service-only completion function. The project does not claim that drawing a signature in the browser or changing a status field is a completed signing integration.
+
 ## Team jobs, checkpoints and files
 
 See [TEAM-SETUP.md](TEAM-SETUP.md) for the exact migration and account setup. The owner assigns an existing client project to a colleague with a title, brief and optional due date. Several jobs/disciplines can belong to one project. The owner view offers search, status filters, a compact summary, reassignment and handover review. It does not add worker surveillance or time tracking.
@@ -203,9 +225,9 @@ All new writes use guarded database functions; table grants provide SELECT only 
 
 The current form offers Website design/development, 3D animation/visual content and General/collaboration enquiry. It has labels, required fields, limits, a honeypot, separate processing consent and optional unticked marketing consent, pending/error states and request idempotency. The budget slider and number field stay synchronised. FAQ answers form one accessible, single-open accordion.
 
-The configured enquiryEndpoint must accept JSON with an Idempotency-Key header and return HTTP 2xx plus {"success":true} only after durable acceptance. Failed submission retains the enquiry text. Acceptance is not independently verified inbox delivery.
+The configured `enquiryEndpoint` accepts JSON with an `Idempotency-Key` header and returns HTTP 2xx plus `{"success":true}` only after the delivery provider accepts the message and the backend records that result. Failed submission retains the enquiry text and duplicate clicks are suppressed.
 
-Your server/Edge Function must perform type/length/category/email/consent validation, enforce rate limits and captcha/spam checks, implement durable idempotency, write protected leads and send email using backend-only mail credentials. Configure CORS for your domain and the Idempotency-Key header. Web3Forms can be integrated behind this endpoint, but the adapter is not a direct Web3Forms access-key client. No real delivery endpoint or authorised mailbox was supplied, so end-to-end email acceptance and delivery were not tested. Do not log personal enquiry data or tokens.
+The shipped `contact-submit` Edge Function uses a server-held Web3Forms key, exact-origin CORS, validation, a honeypot, request idempotency and database rate limiting. It records a contact submission and produces the owner notification only after provider acceptance. The displayed contact address is `khanyaszn@gmail.com`. Do not put the Supabase service key or backend delivery key in this project. Direct browser Web3Forms remains a fallback when no endpoint exists, but it cannot create a trusted owner notification. This build can verify request and database behaviour locally; it cannot verify your Web3Forms account, allowed domain or inbox. Submit a real enquiry from the deployed domain before claiming delivery is live.
 
 ## Media and Work page
 
@@ -238,11 +260,17 @@ Storage inventory:
 
 Dialogs use native modal semantics, keyboard handling, focus restoration, scroll ownership and reduced-motion-aware transitions. Policy labels are professional; legal compliance is not claimed. Confirm the legal operator identity, Information Officer, final retention/deletion procedures, complaints route, third-party operators and processing countries, and obtain appropriate policy approval before public launch. Missing details must not be invented. Consent notices must match your configured enquiry provider and video service.
 
+## Reports, exports and backups
+
+The owner can keep CSV for simple interchange or create a formatted `.xlsx` report with logical worksheets, filters, frozen headings, readable widths, consistent date/number formats and Khanya Digital colours. Text is neutralised when it could be interpreted as a spreadsheet formula. Credentials, tokens and secret configuration are excluded.
+
+The JSON download is labelled an application snapshot. CSV, XLSX and JSON reports are not full Supabase backups: they do not contain Auth credentials, every database object, Storage files or provider configuration. Use Supabase database backups plus a separately tested Storage/Auth recovery process for restoration. Keep all reports restricted because they can contain personal and project information.
+
 ## Hosting, maintenance and rollback
 
 Use HTTPS, exact auth redirects and tested security headers. Configure nosniff, a suitable Referrer-Policy and frame-ancestors protection. The retained inline scripts/styles/event handlers need a nonce/hash/event-handler migration before a strict no-inline CSP can be claimed. No hosting headers are installed by merely including these files.
 
-Maintain provider database/Auth backups appropriate to your plan, test a restore in staging and restrict exported JSON files. JSON exports are not full database/Auth backups. Keep a compatible previous application bundle and policy migration history for rollback. Do not drop production tables to roll back a design change. Audit configured backend dependencies and credentials separately; they are outside this static bundle. No actual user records, emails, passwords, MFA factors or production settings were changed by this development session.
+Maintain provider database/Auth backups appropriate to your plan, test a restore in staging and restrict every exported report or snapshot. Keep a compatible previous application bundle and migration history for rollback. Do not drop production tables to roll back a design change. Audit configured backend dependencies and credentials separately; they are outside this static bundle. No actual user records, emails, passwords, MFA factors or production settings were changed by this development session.
 
 ## Checks performed and genuine limits
 
@@ -250,6 +278,6 @@ npm run check verifies embedded/standalone JavaScript syntax, unique IDs, local 
 
 The team suite additionally executes the migration twice and tests real PostgreSQL RLS/functions in a local simulated Supabase schema: owner aal1/client/anonymous rejection, absent-role denial, assignment isolation, internal/client visibility, append-only access, pending-to-ready uploads, reassignment, handover and the Storage-policy rollback guard. This verifies the shipped SQL under those fixtures, not your live project configuration.
 
-These are DOM, provider-fixture and local database checks. The environment did not expose the shared-browser tool required for managed browser QA, so actual mobile/tablet/desktop rendering, screenshots, screen-reader paths and browser media playback remain unverified. Read-only layout previews can be inspected on your own devices, but are not evidence that a browser review was performed here. Live Supabase RLS/Storage integration, Auth/email redirects, SMTP delivery, backups, media licensing and final business policies remain external setup/verification requirements.
+The final build was also rendered in headless Chromium at 1440×960, 834×1112 and 390×844 for the public site, and at tablet/phone widths for authenticated owner, developer and client fixtures. The checks covered viewport overflow, Kite/Tilt, Studio Access, RAY, developer welcome content, notification panel bounds, single greetings, Community Chat, settings and owner export controls without page or console errors. Screen-reader use, physical touch devices and real media playback still need device-level review. Live Supabase RLS/Storage integration, Auth/email redirects, Web3Forms inbox delivery, backups, media licensing and final business policies remain external setup/verification requirements.
 
 The dependency audit covers the developer package lock when run. The production site itself has no npm runtime dependencies. No remote repository or full historical Git secret scan was available for the user's separate repository; old uploaded prototypes were inspected locally.

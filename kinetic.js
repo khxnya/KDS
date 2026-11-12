@@ -244,7 +244,7 @@ KDS.start = async function () {
     $('panel').inert=true;
     addEventListener('keydown',event=>{if(!$('panel').classList.contains('on'))return;if(event.key==='Escape'){window.menu(false);$('burger').focus();}if(event.key==='Tab'){const focusable=[$('burger'),...$('panel').querySelectorAll('a[href],a[role=button],button:not([disabled])')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
     window.soon=function(what){window.go('contact');const form=$('kf');form.elements.service.value='other';if(!form.elements.message.value)form.elements.message.value='Enquiry about a developing capability: '+what+'. ';form.elements.message.focus();};
-    if(window.CW){CW.script['Can I see your work?']='Our Work page presents independent concepts and design explorations. Each is clearly labelled. Open Work to explore the studio’s direction.';CW.script['What does a site cost?']='We agree scope and pricing in a written proposal after discussing your needs. Share your goals and budget through the contact form.';CW.script['Talk to a human']='Email hello@khanyadigital.co.za or use the contact form. Studio hours: Monday to Friday, 08:00–18:00 SAST.';CW.script['I want to start a project']='Tell us about your project through the contact form. Opening it now.';}
+    if(window.CW){CW.script['Can I see your work?']='Our Work page presents independent concepts and design explorations. Each is clearly labelled. Open Work to explore the studio’s direction.';CW.script['What does a site cost?']='We agree scope and pricing in a written proposal after discussing your needs. Share your goals and budget through the contact form.';CW.script['Talk to a human']='Email khanyaszn@gmail.com or use the contact form. Studio hours: Monday to Friday, 08:00–18:00 SAST.';CW.script['I want to start a project']='Tell us about your project through the contact form. Opening it now.';}
 const form=$('kf');
     if(form){
       const consent=document.createElement('div');consent.innerHTML='<p style="font-size:13px;margin:16px 0">Your details are used to respond to this enquiry. <a href="#privacy">Read the privacy notice</a>. Please do not include sensitive information.</p><label style="display:block;margin:12px 0"><input type="checkbox" name="consent" required> I agree to the processing of this enquiry.</label><label style="display:block;margin:12px 0"><input type="checkbox" name="marketing_opt_in"> Send me occasional studio updates (optional).</label><p role="alert" id="submitError" style="color:#972d20;margin:16px 0"></p>';
@@ -252,12 +252,12 @@ const form=$('kf');
       let pending=false, last=0, lastPayload='', idempotency='';
       window.submitForm=async function(e){e.preventDefault();if(pending||!form.reportValidity())return false;if(form.elements.botcheck.checked)return false;
         const error=$('submitError');error.textContent='';if(Date.now()-last<10000){error.textContent='Please wait a moment before trying again.';return false;}
-        if(!cfg.enquiryEndpoint){error.textContent='Online submissions are not configured yet. Please email hello@khanyadigital.co.za. Your enquiry has not been sent.';return false;}
-        const data=Object.fromEntries(new FormData(form));data.consent=true;data.marketing_opt_in=form.elements.marketing_opt_in.checked;data.consent_version='2026-11-notice-v1';data.source='studio-site';delete data.botcheck;
-        const payload=JSON.stringify(data);if(payload!==lastPayload){idempotency=crypto.randomUUID();lastPayload=payload;}pending=true;last=Date.now();const btn=$('kfBtn');btn.disabled=true;btn.textContent='Sending…';
-        try{const response=await fetch(cfg.enquiryEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':idempotency},body:payload,signal:AbortSignal.timeout(20000)});const result=await response.json();if(!response.ok||result.success!==true)throw Error('Submission not accepted');form.hidden=true;form.style.display='none';$('kfOk').classList.add('on');$('kfOkMsg').textContent='Your enquiry was accepted by the service. Email delivery has not been independently confirmed.';$('kfOk').setAttribute('role','status');}
-        catch(_){error.textContent='We could not confirm acceptance. Your text is still here. Try again or email hello@khanyadigital.co.za.';}
-        finally{pending=false;btn.disabled=false;btn.textContent='Send enquiry ↗';}return false;};
+        const endpoint=String(cfg.enquiryEndpoint||'').trim(),accessKey=String(cfg.web3FormsAccessKey||'').trim();
+        if(!endpoint&&!accessKey){error.textContent='Online submissions are not configured yet. Please email khanyaszn@gmail.com. Your enquiry has not been sent.';return false;}
+        pending=true;last=Date.now();const btn=$('kfBtn'),buttonLabel=btn.textContent;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sending…';
+        try{let response,result,web3Forms=false;if(endpoint){const data=Object.fromEntries(new FormData(form));data.consent=true;data.marketing_opt_in=form.elements.marketing_opt_in.checked;data.consent_version='2026-11-notice-v1';data.source='studio-site';delete data.botcheck;const payload=JSON.stringify(data);if(payload!==lastPayload){idempotency=crypto.randomUUID();lastPayload=payload;}response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':idempotency},body:payload,signal:AbortSignal.timeout(20000)});result=await response.json();}else{web3Forms=true;const data=new FormData(form);data.set('access_key',accessKey);data.set('subject','New Khanya Digital Studio enquiry');data.set('from_name','Khanya Digital Studio website');data.set('consent','Yes');data.set('marketing_opt_in',form.elements.marketing_opt_in.checked?'Yes':'No');data.set('source','studio-site');response=await fetch('https://api.web3forms.com/submit',{method:'POST',body:data,signal:AbortSignal.timeout(20000)});result=await response.json();}if(!response.ok||result.success!==true)throw Error('Submission not accepted');form.hidden=true;form.style.display='none';$('kfOk').classList.add('on');$('kfOkMsg').textContent=web3Forms?'Thank you. Your enquiry has been received. The studio will respond during studio hours.':'Thank you. Your enquiry has been saved and delivered to the studio.';$('kfOk').setAttribute('role','status');}
+        catch(_){error.textContent='We could not send your enquiry. Your message is still here — please try again or email khanyaszn@gmail.com.';}
+        finally{pending=false;btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=buttonLabel;}return false;};
     }
     document.documentElement.dataset.authState='public';return;
   }
@@ -333,6 +333,30 @@ const form=$('kf');
     if(!owner&&isDeveloper&&user.app_metadata?.role!=='developer')throw Error('Developer access is required.');if(!owner&&isClient&&['admin','developer'].includes(user.app_metadata?.role))throw Error('Use the studio owner console for this account.');
     session.user=user;
   }
+  async function saveProfile(data={}){
+    await requireAccess(isAdmin);
+    const existing=(await request('/rest/v1/kds_profiles?select=first_name,surname,phone,business_name,project_contact,skills,availability,preferences&user_id=eq.'+encodeURIComponent(session.user.id)+'&limit=1'))?.[0]||{};
+    const current=session.user.user_metadata||{};
+    const firstName=String(data.first_name??data.firstName??existing.first_name??current.first_name??'').trim();
+    const surname=String(data.surname??data.lastName??existing.surname??current.surname??'').trim();
+    const phone=String(data.phone??existing.phone??current.phone??'').trim();
+    if(!firstName||firstName.length>80||/[<>\u0000-\u001f]/.test(firstName))throw Error('Enter a valid first name of up to 80 characters.');
+    if(!surname||surname.length>100||/[<>\u0000-\u001f]/.test(surname))throw Error('Enter a valid surname of up to 100 characters.');
+    if(phone.length>40||/[<>\u0000-\u001f]/.test(phone))throw Error('Enter a valid phone number of up to 40 characters.');
+    const profile=await request('/rest/v1/rpc/kds_save_my_profile',{method:'POST',body:JSON.stringify({
+      p_first_name:firstName,p_surname:surname,p_phone:phone,
+      p_business_name:String(data.business_name??existing.business_name??'').trim(),
+      p_project_contact:String(data.project_contact??existing.project_contact??'').trim(),
+      p_skills:Array.isArray(data.skills)?data.skills:Array.isArray(existing.skills)?existing.skills:[],
+      p_availability:String(data.availability??existing.availability??'').trim(),
+      p_preferences:data.preferences&&typeof data.preferences==='object'?data.preferences:(existing.preferences||{})
+    })});
+    const metadata={...current,name:firstName+' '+surname,first_name:firstName,surname,phone};
+    const user=await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({data:metadata})});
+    session.user=user;remember();
+    window.dispatchEvent(new CustomEvent('kds:profile-updated',{detail:{first_name:firstName,surname,phone}}));
+    return Array.isArray(profile)?profile[0]:profile;
+  }
   async function enter(){await validateSession();await refresh();if(isAdmin)window.open_();authState('ready');window.dispatchEvent(new CustomEvent('kds:ready',{detail:{role:isAdmin?'owner':isDeveloper?'developer':'client',route:initialRoute}}));}
   async function signIn(email,password){session=null;memory={};sessionStorage.removeItem(sessionKey);const data=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},false);session=data;const user=await request('/auth/v1/user');if(String(user.email||'').toLowerCase()!==email.toLowerCase())throw Error('Sign-in could not be completed for this account.');await enter();}
   let signing=false;
@@ -343,9 +367,9 @@ const form=$('kf');
   if(isClient){
     let onboardingPending=false;
     async function onboardingTask(selector,task){if(onboardingPending)return;onboardingPending=true;const button=document.querySelector(selector);if(button){button.disabled=true;button.setAttribute('aria-busy','true');}try{await task();}catch(e){authError(e.message);}finally{onboardingPending=false;if(button){button.disabled=false;button.removeAttribute('aria-busy');}}}
-    window.signup=()=>onboardingTask('#p-up button[onclick*=signup]',async()=>{const name=$('suName').value.trim(),email=$('suEmail').value.trim().toLowerCase(),password=$('suPass').value;if(!$('suConsent').checked)throw Error('Please review and agree to account data processing.');if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<12)throw Error('Enter your name, a valid email and a password of at least 12 characters.');authError('Creating your workspace account…','loading');await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({email,password,data:{name,phone:$('suPhone').value.trim(),consent_at:new Date().toISOString(),consent_version:'2026-11-notice-v1',marketing_opt_in:$('suMarketing').checked}})},false);$('suPass').value='';authError('Check your email for the next step. You can return to Login once your account is confirmed.','success');});
+    window.signup=()=>onboardingTask('#p-up button[onclick*=signup]',async()=>{const first_name=$('suFirstName').value.trim(),surname=$('suSurname').value.trim(),name=[first_name,surname].filter(Boolean).join(' '),email=$('suEmail').value.trim().toLowerCase(),password=$('suPass').value;if(!$('suConsent').checked)throw Error('Please review and agree to account data processing.');if(!first_name||!surname||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<12)throw Error('Enter your first name, surname, a valid email and a password of at least 12 characters.');authError('Creating your workspace account…','loading');await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({email,password,data:{name,first_name,surname,phone:$('suPhone').value.trim(),consent_at:new Date().toISOString(),consent_version:'2026-11-notice-v1',marketing_opt_in:$('suMarketing').checked}})},false);$('suPass').value='';authError('Check your email for the next step. You can return to Login once your account is confirmed.','success');});
     window.forgot=()=>onboardingTask('#p-fp button',async()=>{const email=$('fpEmail').value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw Error('Enter a valid email address.');authError('Requesting an account recovery email…','loading');await request('/auth/v1/recover?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',body:JSON.stringify({email})},false);authError('If this account can receive recovery email, the next step will be sent.','success');});
-    window.saveAccount=async()=>{try{await requireAccess();const password=$('accPass').value;if(password&&password.length<12)throw Error('Use at least 12 characters.');const user=await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({...(password?{password}:{}),data:{phone:$('accPhone').value.trim()}})});session.user=user;remember();$('accPass').value='';notify('Account updated.');}catch(e){notify(e.message);}};
+    window.saveAccount=async()=>{try{const first_name=$('profileFirstName').value.trim(),surname=$('profileSurname').value.trim(),phone=$('accPhone').value.trim(),password=$('accPass').value;if(password&&password.length<12)throw Error('Use at least 12 characters.');await saveProfile({first_name,surname,phone});if(password){const user=await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({password})});session.user=user;remember();}$('accPass').value='';const greet=$('greet');if(greet){greet.replaceChildren(document.createTextNode('Hello, '));const name=document.createElement('em');name.textContent=first_name+'.';greet.append(name);}notify('Account updated.');}catch(e){notify(e.message);}};
     // Send only after backend confirmation; no optimistic success.
     async function send(kind){if(writes)return;const text=$(kind==='msg'?'msgTa':'conTa').value.trim();if(!text||text.length>5000)return notify('Enter a message of 1–5000 characters.');const row={id:crypto.randomUUID(),kind:'messages',owner_email:session.user.email,data:{text,kind,cat:kind==='concern'?$('conCat').value:'',at:new Date().toISOString(),reply:'',status:'Received'}};writes={};try{await requireAccess();await request('/rest/v1/kds_records',{method:'POST',body:JSON.stringify(row)});$(kind==='msg'?'msgTa':'conTa').value='';await refresh();notify('Message saved to the studio inbox.');}catch(e){notify(e.message);}finally{writes=null;}}
     window.sendMsg=()=>send('msg');window.sendConcern=()=>send('concern');
@@ -380,9 +404,51 @@ const form=$('kf');
       session=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:saved.refresh_token})},false);await enter();
     }catch(e){const invalid=e.status===400||e.status===401||e.status===403||['owner_route','developer_route'].includes(e.code)||/studio access|owner access|verification|MFA|cancelled/i.test(e.message);if(invalid){session=null;sessionStorage.removeItem(sessionKey);authState('login');authError(e.message);}else{authState('error','Could not restore the workspace. Check your connection and retry.');}}finally{restoring=false;}
   }
+  function subscribeRealtime(table,filter={},callback){
+    if(!/^[a-z][a-z0-9_]{0,62}$/.test(String(table||'')))throw Error('Choose a valid realtime table.');
+    if(typeof callback!=='function')throw Error('A realtime update handler is required.');
+    if(typeof WebSocket==='undefined'||!session?.access_token)return()=>{};
+    let stopped=false,socket=null,heartbeat=null,retry=null,attempt=0,reference=0;
+    const topic='realtime:kds-'+(crypto.randomUUID?.()||Math.random().toString(36).slice(2));
+    const filterEntry=filter&&typeof filter==='object'&&!Array.isArray(filter)?Object.entries(filter)[0]:null;
+    let filterText='';
+    if(typeof filter==='string'&&/^[a-z][a-z0-9_]{0,62}=(?:eq|neq|lt|lte|gt|gte|in)\..{1,180}$/i.test(filter))filterText=filter;
+    else if(filterEntry&&/^[a-z][a-z0-9_]{0,62}$/i.test(filterEntry[0])&&['string','number','boolean'].includes(typeof filterEntry[1]))filterText=filterEntry[0]+'=eq.'+String(filterEntry[1]).slice(0,180);
+    const nextRef=()=>String(++reference);
+    const send=(event,payload={},joinRef=null)=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify([joinRef,nextRef(),event==='heartbeat'?'phoenix':topic,event,payload]));};
+    const clear=()=>{clearInterval(heartbeat);heartbeat=null;clearTimeout(retry);retry=null;};
+    const schedule=()=>{if(stopped||!session?.access_token)return;const delay=Math.min(30000,1000*Math.pow(2,Math.min(attempt++,5)));retry=setTimeout(connect,delay);};
+    function connect(){
+      if(stopped||!session?.access_token)return;clear();
+      const base=cfg.supabaseUrl.replace(/^http/i,'ws').replace(/\/$/,'');
+      socket=new WebSocket(base+'/realtime/v1/websocket?apikey='+encodeURIComponent(cfg.supabaseAnonKey)+'&vsn=1.0.0');
+      socket.addEventListener('open',()=>{
+        const change={event:'*',schema:'public',table};if(filterText)change.filter=filterText;
+        send('phx_join',{config:{broadcast:{ack:false,self:false},presence:{key:''},postgres_changes:[change],private:false},access_token:session.access_token},nextRef());
+        heartbeat=setInterval(()=>send('heartbeat'),25000);
+      });
+      socket.addEventListener('message',event=>{
+        let message;try{message=JSON.parse(event.data);}catch(_){return;}
+        const type=Array.isArray(message)?message[3]:message.event,payload=Array.isArray(message)?message[4]:message.payload;
+        if(type==='phx_reply'){
+          if(payload?.status==='ok')attempt=0;
+          else if(payload?.status==='error')socket.close(4000,'Subscription rejected');
+          return;
+        }
+        if(type==='postgres_changes'||['INSERT','UPDATE','DELETE'].includes(type))Promise.resolve(callback(payload?.data||payload)).catch(()=>{});
+      });
+      socket.addEventListener('close',()=>{clearInterval(heartbeat);heartbeat=null;schedule();});
+      socket.addEventListener('error',()=>{try{socket.close();}catch(_){}});
+    }
+    connect();
+    return()=>{stopped=true;clear();if(socket){try{send('phx_leave');socket.close(1000,'Subscription closed');}catch(_){}socket=null;}};
+  }
   KDS.teamApi={
     request,check:()=>requireAccess(isAdmin),
-    identity:()=>session?.user?{id:session.user.id,email:session.user.email,role:session.user.app_metadata?.role||'client'}:null,
+    identity:()=>session?.user?{id:session.user.id,email:session.user.email,role:session.user.app_metadata?.role||'client',metadata:session.user.user_metadata||{}}:null,
+    subscribe:subscribeRealtime,
+    saveProfile,
+    updateProfile:async(data)=>{await requireAccess(isAdmin);const user=await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({data})});session.user=user;remember();return user;},
     upload:async(path,file)=>{await requireAccess(isAdmin);const response=await fetch(cfg.supabaseUrl.replace(/\/$/,'')+'/storage/v1/object/kds-job-files/'+path.split('/').map(encodeURIComponent).join('/'),{method:'POST',headers:{apikey:cfg.supabaseAnonKey,Authorization:'Bearer '+session.access_token,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},body:file,signal:AbortSignal.timeout(120000)});if(!response.ok)throw Error('The upload could not be completed. Your file has not been shared.');},
     removePendingObject:async(path)=>{await request('/storage/v1/object/kds-job-files',{method:'DELETE',body:JSON.stringify({prefixes:[path]})});},
     sign:async(path)=>{const result=await request('/storage/v1/object/sign/kds-job-files/'+path.split('/').map(encodeURIComponent).join('/'),{method:'POST',body:JSON.stringify({expiresIn:300})});const value=result.signedURL||result.signedUrl;if(!value)throw Error('A file link could not be created.');return value.startsWith('https://')?value:cfg.supabaseUrl.replace(/\/$/,'')+'/storage/v1'+value;}

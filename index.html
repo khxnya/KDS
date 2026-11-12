@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="v6.css">
 <title>Khanya Digital Studio | Websites &amp; 3D Visual Content</title>
 <meta name="description" content="Khanya Digital Studio helps businesses strengthen their digital presence through website design, development, 3D animation and visual storytelling.">
@@ -788,7 +788,7 @@ body.portal-refresh{font-size:15px}body.portal-refresh .v-head h2{font-size:clam
     <div class="wrap ct-grid">
       <div data-rev="l">
         <div class="ct-card">
-          <div class="ct-row"><span>Email</span><span><a href="mailto:hello@khanyadigital.co.za">hello@khanyadigital.co.za</a></span></div>
+          <div class="ct-row"><span>Email</span><span><a href="mailto:khanyaszn@gmail.com">khanyaszn@gmail.com</a></span></div>
           <div class="ct-row"><span>Studio</span><span>South Africa · Working online</span></div>
           <div class="ct-row"><span>Hours</span><span>Mon–Fri · 08:00–18:00 SAST</span></div>
           <div class="ct-row"><span>Reply time</span><span>During studio hours</span></div>
@@ -1118,8 +1118,8 @@ function budget(v){
   document.getElementById('bval').textContent = v>=60000 ? 'R60,000+' : 'R'+v.toLocaleString('en-US');
 }
 
-/* ══ contact form ══ */
-function submitForm(e){e.preventDefault();toast('The contact service is not ready. Please email hello@khanyadigital.co.za.');return false;}
+/* Contact submission is owned by kinetic.js. It provides validation, honeypot,
+   duplicate prevention and the configured Web3Forms/server delivery flow. */
 
 /* ══ concierge — scripted, no API key, ever ══ */
 var CW={
@@ -1130,7 +1130,7 @@ var CW={
     'What is automation, exactly?':'Automation and application development are capabilities the studio is still developing. They are coming soon and are not currently offered for purchase.',
     'Can I see your work?':'The Work page shows the studio platform, internal identity explorations and visual studies, each labelled for what it is. No client work or results are invented.',
     'I want to start a project':'The enquiry form asks for the details needed to understand the work. The studio will review it and respond during studio hours. Opening it now.',
-    'Talk to a human':'That is Khanya, and he answers personally: hello@khanyadigital.co.za, Mon–Fri 08:00–18:00 SAST. Studio hours: Monday–Friday.'
+    'Talk to a human':'That is Khanya, and he answers personally: khanyaszn@gmail.com, Mon–Fri 08:00–18:00 SAST. Studio hours: Monday–Friday.'
   }
 };
 function cw(force){
@@ -1156,7 +1156,7 @@ function cwChips(){
 function cwAsk(k){
   cwSay('u',k);
   setTimeout(function(){
-    cwSay('a',CW.script[k]||'Email hello@khanyadigital.co.za to discuss your question with the studio.');
+    cwSay('a',CW.script[k]||'Email khanyaszn@gmail.com to discuss your question with the studio.');
     if(k==='I want to start a project'){ setTimeout(function(){ cw(false); go('contact'); },900); }
   },420);
 }
@@ -1177,8 +1177,8 @@ document.addEventListener('DOMContentLoaded',function(){
   function shell(title){dialog.replaceChildren();const close=document.createElement('button');close.className='close-policy';close.textContent='Close ×';close.type='button';close.onclick=()=>KDS.modalClose(dialog);const heading=document.createElement('h2');heading.id='privacyDialogTitle';heading.textContent=title;dialog.setAttribute('aria-labelledby',heading.id);dialog.append(close,heading);}
   function p(text){const element=document.createElement('p');element.textContent=text;dialog.append(element);}
   const notices={
-    privacy:['Privacy notice','Khanya Digital Studio is an online digital studio in South Africa. For privacy questions, or requests about information you have shared, contact hello@khanyadigital.co.za.','Enquiries collect your name, email, optional business and phone details, project description and contact preferences so the studio can respond and discuss your project. Please do not submit sensitive information through the enquiry form.','Client accounts use authentication and workspace records to display assigned projects and conversations. Colleague accounts process assigned jobs, checkpoints and progress assets; only items explicitly shared with clients appear in client workspaces. Project files use private Supabase Storage and short-lived viewing links. Opening an external progress link is subject to that external service and its sharing settings. These are processed through the studio’s configured Supabase service. The enquiry service, when enabled, also processes the information you submit.','Marketing updates are optional. Leaving the marketing checkbox unticked does not prevent you from sending an enquiry. Contact the studio to withdraw permission or ask about information held about you.','The final legal operator details, Information Officer contact, retention schedule and provider processing locations require confirmation. Ask the studio for the current business-policy information before sharing sensitive material.','This website includes no advertising or analytics scripts. Optional externally hosted video is blocked until you allow external media. You can change that choice at any time using Cookie preferences.'],
-    terms:['Website terms','This website introduces Khanya Digital Studio and its website design, development, 3D animation and visual-content services. Any concept example is identified as a studio concept and is not presented as commissioned client work.','A website enquiry starts a conversation. Project scope, deliverables, timing, fees and support are agreed in a written proposal before work begins. No purchase is completed through this website.','Software applications and automation are developing areas of the studio. They are not presented as products currently available for purchase.','For questions about a proposal, website content or a concern, contact hello@khanyadigital.co.za. Applicable consumer rights remain unaffected.'],
+    privacy:['Privacy notice','Khanya Digital Studio is an online digital studio in South Africa. For privacy questions, or requests about information you have shared, contact khanyaszn@gmail.com.','Enquiries collect your name, email, optional business and phone details, project description and contact preferences so the studio can respond and discuss your project. Please do not submit sensitive information through the enquiry form.','Client accounts use authentication and workspace records to display assigned projects and conversations. Colleague accounts process assigned jobs, checkpoints and progress assets; only items explicitly shared with clients appear in client workspaces. Project files use private Supabase Storage and short-lived viewing links. Opening an external progress link is subject to that external service and its sharing settings. These are processed through the studio’s configured Supabase service. The enquiry service, when enabled, also processes the information you submit.','Marketing updates are optional. Leaving the marketing checkbox unticked does not prevent you from sending an enquiry. Contact the studio to withdraw permission or ask about information held about you.','The final legal operator details, Information Officer contact, retention schedule and provider processing locations require confirmation. Ask the studio for the current business-policy information before sharing sensitive material.','This website includes no advertising or analytics scripts. Optional externally hosted video is blocked until you allow external media. You can change that choice at any time using Cookie preferences.'],
+    terms:['Website terms','This website introduces Khanya Digital Studio and its website design, development, 3D animation and visual-content services. Any concept example is identified as a studio concept and is not presented as commissioned client work.','A website enquiry starts a conversation. Project scope, deliverables, timing, fees and support are agreed in a written proposal before work begins. No purchase is completed through this website.','Software applications and automation are developing areas of the studio. They are not presented as products currently available for purchase.','For questions about a proposal, website content or a concern, contact khanyaszn@gmail.com. Applicable consumer rights remain unaffected.'],
     storage:['Cookies & storage','Essential storage supports account sessions and functional preferences. kds_owner_session, kds_client_session and kds_developer_session are separate sessionStorage entries for owner, client and developer access. They are cleared on logout or tab closure. The former shared kds_session entry is invalidated during startup. kds_portal_theme stores your selected workspace appearance until cleared.','kds_privacy_preferences stores your cookie and external-media choice for up to six months. No advertising or analytics scripts are included in this build.','External video is optional. If you permit it and open a video, the configured video provider may process your connection information and use its own cookies. Withdrawing permission removes the embedded player and blocks future loading. Provider cookies already stored may also need to be cleared through your browser.','There is no shared-password or local demonstration login in this revision. Layout previews are separate read-only snapshots with no authentication or database connection.']
   };
   function openNotice(name){const notice=notices[name];if(!notice)return;shell(notice[0]);notice.slice(1).forEach(p);if(!dialog.open)KDS.modalOpen(dialog);}
@@ -1251,5 +1251,5 @@ document.addEventListener('DOMContentLoaded',function(){
     if($('auth')){const input=$('liEmail');input.autocomplete='username';const title=$('auTitle');if(title)title.textContent='Client login';const sub=$('auSub');if(sub)sub.textContent='Login to an existing workspace, or choose Get started to create an account.';}
   }
 });
-</script><script src="team.js"></script><script src="v6.js"></script></body>
+</script><script src="team.js"></script><script src="v6.js"></script><script src="v7.js"></script><script src="v8-public.js"></script><link rel="stylesheet" href="v7.css"><link rel="stylesheet" href="v8-public.css"></body>
 </html>
