@@ -38,14 +38,14 @@ function dom(markup) {
   publicDom.window.document.dispatchEvent(new publicDom.window.Event('DOMContentLoaded'));
 
   const doc = publicDom.window.document;
-  assert.equal(doc.querySelector('#identity-0').hidden, false, 'Kite starts visible');
-  assert.equal(doc.querySelector('#identity-1').hidden, true, 'Tilt starts hidden');
-  assert.match(doc.querySelector('.work-direction h2').textContent, /clear frame/i);
+  assert.equal(doc.querySelector('#identity-0').hasAttribute('hidden'), false, 'Kite starts visible');
+  assert.equal(doc.querySelector('#identity-1').hasAttribute('hidden'), true, 'Tilt starts hidden');
+  assert.match(doc.querySelector('.work-direction h2').textContent, /diamond frame/i);
   doc.querySelector('[data-identity="1"]').click();
-  assert.equal(doc.querySelector('#identity-0').hidden, true, 'Kite hides after Tilt selection');
-  assert.equal(doc.querySelector('#identity-1').hidden, false, 'Tilt becomes visible');
+  assert.equal(doc.querySelector('#identity-0').hasAttribute('hidden'), true, 'Kite hides after Tilt selection');
+  assert.equal(doc.querySelector('#identity-1').hasAttribute('hidden'), false, 'Tilt becomes visible');
   assert.equal(doc.querySelector('.identity-preview').dataset.identity, 'tilt');
-  assert.match(doc.querySelector('.work-direction h2').textContent, /forward movement/i);
+  assert.match(doc.querySelector('.work-direction h2').textContent, /forward lean/i);
   assert.equal(doc.querySelector('[data-identity="1"]').getAttribute('aria-pressed'), 'true');
 
   assert.equal(doc.querySelectorAll('.v8-access-card').length, 2, 'Studio Access contains developer and owner cards');

@@ -45,7 +45,7 @@ async function adminFixture() {
       <button class="kds-notice-trigger">Notifications</button></div></div><section id="v-settings"></section></main>
       <nav id="nav"><a data-v="overview">Overview</a><a data-v="community">Old Community</a><a data-v="settings">Settings</a></nav>
       <section id="v-community">Old chat</section>
-    </div><div id="kdsNotifications">Old notification dialog</div><div class="a-av">K</div>
+    </div><div id="kdsNotifications">Old notification dialog</div><div class="a-user"><div class="a-av">RR</div></div>
   </body></html>`, { url: 'https://studio.invalid/admin.html', runScripts: 'outside-only', pretendToBeVisual: true, virtualConsole });
   const { window } = dom;
   window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
@@ -89,7 +89,7 @@ async function run() {
   assert.match(document.getElementById('v-community').textContent, /Community Chat/);
   assert.ok(document.getElementById('kdsBellV8'), 'notification bell is installed');
   assert.equal(document.querySelector('.kds8-bell-count').textContent, '1');
-  assert.equal(document.querySelector('.a-av').getAttribute('aria-label'), 'Khanya Ngema profile');
+  assert.equal(document.querySelector('.a-av').getAttribute('aria-label'), 'Ray Ro');
   const settings = document.querySelector('#kdsProfileSettingsV8 form');
   assert.ok(settings, 'persisted owner profile settings are mounted');
   settings.elements.first_name.value = 'Khanya';

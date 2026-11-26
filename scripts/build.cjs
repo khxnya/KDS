@@ -36,6 +36,7 @@ const releaseFiles = [
   'team.sql',
   'collaboration.sql',
   'production-v8.sql',
+  'workflow.sql',
   'setup.html',
   'package.json',
   'package-lock.json'

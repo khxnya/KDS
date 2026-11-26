@@ -39,14 +39,13 @@ The final queries in the migration list the installed policies and profile-image
 
 ## Contact delivery Edge Function
 
-The production contact path is `supabase/functions/contact-submit/index.ts`. It validates and rate-limits a submission, sends it through Web3Forms, records the accepted submission through a service-only database function, and then lets the database trigger notify owners. A failed provider response is returned as a failure and must not create a success notification.
+The production contact path is `supabase/functions/contact-submit/index.ts`. It validates and rate-limits submissions. The contact recorder and database triggers save the enquiry, create its lead, and notify the owner in one transaction.
 
 Deploy it from a Supabase CLI project linked to the intended environment:
 
 ```bash
 supabase functions deploy contact-submit --no-verify-jwt
 supabase secrets set KDS_ALLOWED_ORIGIN=https://www.example.com
-supabase secrets set WEB3FORMS_ACCESS_KEY=YOUR_WEB3FORMS_ACCESS_KEY
 supabase secrets set KDS_RATE_SALT=GENERATE_A_LONG_RANDOM_VALUE
 ```
 
@@ -63,17 +62,15 @@ window.KDS_CONFIG = {
 };
 ```
 
-Keep `web3FormsAccessKey` empty when the Edge Function is used. The backend-held Web3Forms key enables persisted owner notifications and keeps delivery configuration out of the browser. The direct browser Web3Forms path remains a limited fallback; it cannot create a trusted database notification.
-
 The form includes consent validation, a honeypot, request idempotency and backend rate limiting. Cloudflare Turnstile support in the Edge Function is optional. Do not set `TURNSTILE_SECRET_KEY` until the matching site widget/token integration is enabled on the public form, or valid submissions will fail the check.
 
 After deployment, send one real enquiry from the allowed public origin. Confirm all three results before claiming delivery works:
 
 1. The visitor sees the success state only once.
-2. The message reaches `khanyaszn@gmail.com` through the verified Web3Forms account.
+2. The new lead appears in the admin list with the submitted details.
 3. One `kds_contact_submissions` row and one owner notification exist for the request.
 
-Web3Forms account verification, allowed-domain configuration and inbox delivery cannot be verified by local tests.
+Confirm the overview count changes and retrying the same request keeps one lead.
 
 ## Authentication, roles and account names
 
@@ -135,7 +132,15 @@ Upload the complete contents of `dist/` together so HTML and JavaScript revision
 - Explicit workspace exit requires a fresh login before protected data is usable again.
 - Owner avatar, profile settings and Johannesburg 12-hour clock render at phone, tablet and desktop widths.
 - XLSX opens in Excel/LibreOffice with expected worksheets, filters and formatting; CSV remains available.
-- Contact failure retains the form, success is deduplicated, delivery reaches the intended inbox and the owner receives one notification.
+- Contact failure retains the form, success is deduplicated, the lead appears in the admin panel and the owner receives one notification.
 - Anonymous/cross-account REST calls fail under RLS.
 
-Local tests use fixtures and do not touch production. Live Auth email, MFA, Web3Forms delivery, Realtime connectivity, Storage, RLS isolation and signing-provider behaviour still require staging and production validation with real configuration.
+Local tests use fixtures and do not touch production. Live Auth email, MFA, contact delivery, Realtime connectivity, Storage, RLS isolation and signing-provider behaviour still require staging and production validation with real configuration.
+
+## Contact, assignment and Microsoft rollout
+
+1. Apply `workflow.sql` after `production-v8.sql` and before deploying the frontend. This imports existing accepted enquiries and creates future leads in the same transaction as each submission. Deploy the updated `contact-submit` function with public invocation enabled. Set the exact site origin and a private rate-limit salt. Enquiries are delivered directly to the studio lead list.
+2. Register a Microsoft application that supports the account type used by the owner. For a personal Microsoft account registered under a Gmail address, enable personal Microsoft accounts. Register the Supabase Auth callback as a Web redirect URI. Configure Microsoft's optional verified-domain claim `xms_edov`, then configure the Azure provider, client ID and secret in Supabase. Allow the site's exact HTTPS `admin.html` callback URL.
+3. Have the owner complete Microsoft sign-in for `khanyangema5@gmail.com`. In the trusted Supabase administration interface, verify the confirmed user UUID and Azure identity before assigning the server-managed admin role. Complete the existing TOTP challenge and test sign-out, a fresh sign-in, an unauthorized account, and account recovery.
+4. Keep the password credential in KeePassXC until the owner verifies both Microsoft access and recovery. Schedule retirement of the legacy admin password separately. Client and developer accounts also use password authentication.
+5. Static hosting serves the login page and workspace HTML shell publicly. Supabase role and MFA policies govern protected records. If the HTML itself must require authentication, configure a server-side session gateway at the hosting origin before rollout.

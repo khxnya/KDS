@@ -42,7 +42,15 @@ async function run(){const data=await database(accounts,records);try{
  for(let attempt=1;attempt<=5;attempt++)assert.equal((await data.db.query('select kds_check_contact_rate($1) allowed',[fingerprint])).rows[0].allowed,true);
  assert.equal((await data.db.query('select kds_check_contact_rate($1) allowed',[fingerprint])).rows[0].allowed,false);
  const contact=(await data.db.query("select kds_record_contact_submission('web3forms:test-request-0001','visitor@example.invalid','Visitor','website','A website enquiry','{}'::jsonb) id")).rows[0].id;
- assert.ok(contact);
+ await data.db.exec(fs.readFileSync(path.join(root,'workflow.sql'),'utf8'));
+ const lead=await data.as(owner,"select data from kds_records where id=$1",[contact]);
+ assert.equal(lead.rows[0].data.status,'new');
+ await data.as(owner,'select kds_assign_lead($1,$2)',[contact,accounts.developer.id]);
+ assert.equal((await data.as(owner,'select assignee_id from kds_records where id=$1',[contact])).rows[0].assignee_id,accounts.developer.id);
+ await assert.rejects(()=>data.as(client,'select kds_assign_lead($1,null)',[contact]),e=>e.code==='42501');
+ await data.as(owner,'select kds_assign_lead($1,null)',[contact]);
+ await data.db.query("select kds_record_contact_submission('web3forms:another-request','visitor@example.invalid','Second visitor','website','Another enquiry','{}')");
+ assert.equal((await data.as(owner,"select count(*)::int n from kds_records where kind='leads'")).rows[0].n,2);
  assert.equal((await data.as(owner,"select count(*)::int n from kds_notifications where event_key='contact:web3forms:test-request-0001'")).rows[0].n,1);
  assert.ok(agreement);assert.ok(job);
  console.log('PASS v8 SQL repeatability, profile isolation, project chat receipts, notification RLS, contact rate limits/events and MFA owner actions');

@@ -31,6 +31,7 @@ Deno.serve(async request => {
 
   let input: Record<string, unknown>;
   try { input = await request.json(); } catch { return json(400, { success: false, message: "Invalid request." }, allowedOrigin); }
+  if (!input || typeof input !== "object" || Array.isArray(input)) return json(422,{success:false,message:"Invalid enquiry."},allowedOrigin);
   if (clean(input.botcheck, 10)) return json(200, { success: true }, allowedOrigin);
 
   const submission = {
@@ -40,7 +41,7 @@ Deno.serve(async request => {
     phone: clean(input.phone, 40),
     service: clean(input.service, 40),
     timeline: clean(input.timeline, 80),
-    contact_method: clean(input.contact, 40),
+    contact_method: clean(input.contact_pref, 40),
     budget: Math.max(0, Math.min(10_000_000, Number(input.budget) || 0)),
     message: clean(input.message, 5000),
     marketing_opt_in: input.marketing_opt_in === true,
@@ -70,8 +71,7 @@ Deno.serve(async request => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const deliveryKey = Deno.env.get("WEB3FORMS_ACCESS_KEY") ?? "";
-  if (!supabaseUrl || !serviceKey || !deliveryKey) return json(503, { success: false, message: "Enquiry delivery is not configured." }, allowedOrigin);
+  if (!supabaseUrl || !serviceKey) return json(503, { success: false, message: "Enquiry delivery is not configured." }, allowedOrigin);
   const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
   const providerRequestId = `web3forms:${idempotencyKey}`;
   const existing = await db.from("kds_contact_submissions").select("id,delivery_state").eq("provider_request_id", providerRequestId).maybeSingle();
@@ -83,32 +83,6 @@ Deno.serve(async request => {
   const { data: allowed, error: rateError } = await db.rpc("kds_check_contact_rate", { p_fingerprint: ipHash });
   if (rateError) return json(503, { success: false, message: "Enquiry service unavailable." }, allowedOrigin);
   if (!allowed) return json(429, { success: false, message: "Please wait before sending another enquiry." }, allowedOrigin);
-
-  const delivery = new FormData();
-  delivery.set("access_key", deliveryKey);
-  delivery.set("subject", "New Khanya Digital Studio enquiry");
-  delivery.set("from_name", "Khanya Digital Studio website");
-  delivery.set("name", submission.name);
-  delivery.set("email", submission.email);
-  delivery.set("replyto", submission.email);
-  delivery.set("business", submission.business);
-  delivery.set("phone", submission.phone);
-  delivery.set("service", submission.service);
-  delivery.set("timeline", submission.timeline);
-  delivery.set("preferred_contact", submission.contact_method);
-  delivery.set("budget", String(submission.budget));
-  delivery.set("message", submission.message);
-  delivery.set("marketing_opt_in", submission.marketing_opt_in ? "Yes" : "No");
-  delivery.set("request_id", providerRequestId);
-  let sent: Response;
-  try {
-    sent = await fetch("https://api.web3forms.com/submit", { method: "POST", body: delivery });
-  } catch {
-    return json(502, { success: false, message: "Enquiry delivery could not be reached." }, allowedOrigin);
-  }
-  const sentBody = await sent.json().catch(() => ({ success: false }));
-  const accepted = sent.ok && sentBody.success === true;
-  if (!accepted) return json(502, { success: false, message: "Enquiry delivery was not accepted." }, allowedOrigin);
 
   // The trusted recorder inserts the durable row. Its AFTER INSERT trigger
   // creates the owner notification only after this successful save.
@@ -131,7 +105,7 @@ Deno.serve(async request => {
     p_metadata: metadata,
   });
   if (recorded.error || !recorded.data) {
-    return json(503, { success: false, message: "The enquiry was delivered but its studio record could not be confirmed. Contact the studio before resending." }, allowedOrigin);
+    return json(503, { success: false, message: "Your enquiry could not be saved. Please retry." }, allowedOrigin);
   }
   return json(200, { success: true, submission_id: recorded.data }, allowedOrigin);
 });

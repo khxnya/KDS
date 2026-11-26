@@ -28,3 +28,7 @@ body.public #cw .cw-x{min-width:44px;min-height:44px;border-radius:7px;color:#db
 body.public #cw .cw-x:hover,body.public #cw .cw-x:focus-visible{background:#ffffff14!important;color:#fff!important}
 
 @media(max-width:600px){body.public #cw{inset:auto 10px 76px!important;width:auto!important;max-height:min(72dvh,620px)}body.public #cw .cw-msgs{min-height:120px;max-height:38dvh}}
+.identity-preview svg[hidden]{display:none!important}
+.identity-preview svg.v8-identity-active{display:block!important;visibility:visible;width:min(62%,260px);height:auto;aspect-ratio:1;flex:none}
+body.public{font-family:system-ui,sans-serif;line-height:1.55}
+body.public :is(input,textarea,select,button){font-family:inherit}
