@@ -33,14 +33,14 @@
   const identityCopy = {
     '0': {
       tag: 'STUDIO IDENTITY / KITE',
-      title: 'A clear frame for connected work.',
-      body: 'Kite holds the K and D inside a steady diamond. It reflects the structure a business needs across its website, visual content and the places people meet it online.',
+      title: 'Kite · The diamond frame',
+      body: 'The K and D interlock inside a rotated square, echoing the original studio diamond.',
       detail: 'The framed form feels composed and grounded. Choose Kite to see the more structured direction.'
     },
     '1': {
       tag: 'STUDIO IDENTITY / TILT',
-      title: 'A mark with forward movement.',
-      body: 'Tilt opens the frame and moves the interlock forward. It reflects a studio that connects clear digital foundations with expressive 3D and visual storytelling.',
+      title: 'Tilt · The forward lean',
+      body: 'The unframed K and D lean forward. Select Kite to compare the diamond-framed version.',
       detail: 'The open form feels lighter and more dynamic. Choose Tilt to see the more expressive direction.'
     }
   };
@@ -58,7 +58,7 @@
     preview.dataset.identity = name === '0' ? 'kite' : 'tilt';
     preview.setAttribute('aria-label', `${name === '0' ? 'Kite' : 'Tilt'} interlock design`);
     art.forEach((item) => {
-      item.hidden = item !== next;
+      item.toggleAttribute('hidden',item !== next);
       item.classList.toggle('v8-identity-active', item === next);
     });
     buttons.forEach((button) => {
@@ -150,7 +150,9 @@
     const questions = $('.cw-q', panel);
     if (title) title.textContent = 'RAY';
     if (status) status.textContent = 'Khanya Digital studio guide';
-    if (avatar) avatar.textContent = 'R';
+    const rayImage = () => Object.assign(document.createElement('img'), {src:'ray.webp',alt:'',className:'ray-avatar'});
+    fab.replaceChildren(rayImage());
+    if (avatar) avatar.replaceChildren(rayImage());
     if (close) {
       close.setAttribute('aria-label', 'Close RAY');
       close.setAttribute('title', 'Close RAY');

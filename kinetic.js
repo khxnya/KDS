@@ -252,11 +252,21 @@ const form=$('kf');
       let pending=false, last=0, lastPayload='', idempotency='';
       window.submitForm=async function(e){e.preventDefault();if(pending||!form.reportValidity())return false;if(form.elements.botcheck.checked)return false;
         const error=$('submitError');error.textContent='';if(Date.now()-last<10000){error.textContent='Please wait a moment before trying again.';return false;}
-        const endpoint=String(cfg.enquiryEndpoint||'').trim(),accessKey=String(cfg.web3FormsAccessKey||'').trim();
-        if(!endpoint&&!accessKey){error.textContent='Online submissions are not configured yet. Please email khanyaszn@gmail.com. Your enquiry has not been sent.';return false;}
+        const endpoint=String(cfg.enquiryEndpoint||'').trim();
+        if(!endpoint){error.textContent='Online submissions are not configured yet. Please email khanyaszn@gmail.com. Your enquiry has not been sent.';return false;}
         pending=true;last=Date.now();const btn=$('kfBtn'),buttonLabel=btn.textContent;btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Sending…';
-        try{let response,result,web3Forms=false;if(endpoint){const data=Object.fromEntries(new FormData(form));data.consent=true;data.marketing_opt_in=form.elements.marketing_opt_in.checked;data.consent_version='2026-11-notice-v1';data.source='studio-site';delete data.botcheck;const payload=JSON.stringify(data);if(payload!==lastPayload){idempotency=crypto.randomUUID();lastPayload=payload;}response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':idempotency},body:payload,signal:AbortSignal.timeout(20000)});result=await response.json();}else{web3Forms=true;const data=new FormData(form);data.set('access_key',accessKey);data.set('subject','New Khanya Digital Studio enquiry');data.set('from_name','Khanya Digital Studio website');data.set('consent','Yes');data.set('marketing_opt_in',form.elements.marketing_opt_in.checked?'Yes':'No');data.set('source','studio-site');response=await fetch('https://api.web3forms.com/submit',{method:'POST',body:data,signal:AbortSignal.timeout(20000)});result=await response.json();}if(!response.ok||result.success!==true)throw Error('Submission not accepted');form.hidden=true;form.style.display='none';$('kfOk').classList.add('on');$('kfOkMsg').textContent=web3Forms?'Thank you. Your enquiry has been received. The studio will respond during studio hours.':'Thank you. Your enquiry has been saved and delivered to the studio.';$('kfOk').setAttribute('role','status');}
-        catch(_){error.textContent='We could not send your enquiry. Your message is still here — please try again or email khanyaszn@gmail.com.';}
+        try {
+          const data=Object.fromEntries(new FormData(form));
+          Object.assign(data,{consent:true,marketing_opt_in:form.elements.marketing_opt_in.checked,consent_version:'2026-11-notice-v1'});
+          delete data.botcheck;
+          const payload=JSON.stringify(data);
+          if(payload!==lastPayload){idempotency=crypto.randomUUID();lastPayload=payload;}
+          const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':idempotency},body:payload,signal:AbortSignal.timeout(20000)});
+          const result=await response.json();
+          if(!response.ok||!result.submission_id||result.success!==true)throw Error(result.message||'Save could not be confirmed.');
+          form.hidden=true;form.style.display='none';$('kfOk').classList.add('on');
+          $('kfOkMsg').textContent='Thank you. The studio has received your enquiry.';$('kfOk').setAttribute('role','status');
+        } catch(e){error.textContent=(e.message||'Could not confirm delivery.')+' Your details are still here. Please try again.';}
         finally{pending=false;btn.disabled=false;btn.removeAttribute('aria-busy');btn.textContent=buttonLabel;}return false;};
     }
     document.documentElement.dataset.authState='public';return;
@@ -323,8 +333,8 @@ const form=$('kf');
     }
     if(isDeveloper&&user.app_metadata?.role!=='developer'){const error=Error('This account does not have a developer workspace. Ask the studio owner to add your work account.');error.code='developer_route';throw error;}if(isClient&&user.app_metadata?.role==='developer'){const error=Error('This account uses developer.html. Open the developer portal to continue.');error.code='developer_route';throw error;}if(isClient&&user.app_metadata?.role==='admin'){const error=Error('This account uses the studio owner console. Open admin.html to continue.');error.code='owner_route';throw error;}remember();
   }
-  function safeRecord(row){const d=row.data;if(!d||typeof d!=='object'||Array.isArray(d)||!/^[a-zA-Z0-9_-]{1,100}$/.test(row.id))throw Error('Invalid workspace record');const result={...d,id:row.id};if(row.kind==='projects'){result.stage=Math.max(0,Math.min(4,Math.floor(Number(d.stage)||0)));result.email=row.owner_email;result.files=Array.isArray(d.files)?d.files:[];result.timeline=Array.isArray(d.timeline)?d.timeline:[];}if(row.kind==='messages'||row.kind==='profiles')result.email=row.owner_email;return result;}
-  async function refresh(){if(isDeveloper){window.openDeveloper?.({email:session.user.email,name:session.user.user_metadata?.name||'Developer'});return;}if(loading)return;loading=true;try{let rows=[],offset=0;while(true){const batch=await request('/rest/v1/kds_records?select=id,kind,owner_email,data&order=created_at.desc,id.asc&limit=500&offset='+offset);rows.push(...batch);if(batch.length<500)break;offset+=500;}const next={};Object.keys(keys).forEach(key=>next[key]=rows.filter(row=>row.kind===keys[key]).map(safeRecord));if(isAdmin){next[K.projects].forEach(p=>{const note=rows.find(r=>r.kind==='private_notes'&&r.id==='note_'+p.id);p.notes=note?.data?.notes||'';});}memory=next;render();}finally{loading=false;}}
+  function safeRecord(row){const d=row.data;if(!d||typeof d!=='object'||Array.isArray(d)||!/^[a-zA-Z0-9_-]{1,100}$/.test(row.id))throw Error('Invalid workspace record');const result={...d,id:row.id};if(row.kind==='leads') result.assignee_id=row.assignee_id; if(row.kind==='projects'){result.stage=Math.max(0,Math.min(4,Math.floor(Number(d.stage)||0)));result.email=row.owner_email;result.files=Array.isArray(d.files)?d.files:[];result.timeline=Array.isArray(d.timeline)?d.timeline:[];}if(row.kind==='messages'||row.kind==='profiles')result.email=row.owner_email;return result;}
+  async function refresh(){if(isDeveloper){window.openDeveloper?.({email:session.user.email,name:session.user.user_metadata?.name||'Developer'});return;}if(loading)return;loading=true;try{let rows=[],offset=0;while(true){const batch=await request('/rest/v1/kds_records?select=id,kind,owner_email,data,assignee_id&order=created_at.desc,id.asc&limit=500&offset='+offset);rows.push(...batch);if(batch.length<500)break;offset+=500;}const next={};Object.keys(keys).forEach(key=>next[key]=rows.filter(row=>row.kind===keys[key]).map(safeRecord));if(isAdmin){next[K.projects].forEach(p=>{const note=rows.find(r=>r.kind==='private_notes'&&r.id==='note_'+p.id);p.notes=note?.data?.notes||'';});}memory=next;render();}finally{loading=false;}}
   function render(){if(isDeveloper){window.openDeveloper?.({email:session.user.email,name:session.user.user_metadata?.name||'Developer'});return;}if(isAdmin)window.renderAll();else{const me=window.load(K.session,{});window.openDash(me);$('accPhone').value=session.user.user_metadata?.phone||'';}}
   async function requireAccess(owner=false){
     if(!session?.access_token)throw Error('Please sign in to continue.');
@@ -444,7 +454,7 @@ const form=$('kf');
     return()=>{stopped=true;clear();if(socket){try{send('phx_leave');socket.close(1000,'Subscription closed');}catch(_){}socket=null;}};
   }
   KDS.teamApi={
-    request,check:()=>requireAccess(isAdmin),
+    request,refresh,check:()=>requireAccess(isAdmin),
     identity:()=>session?.user?{id:session.user.id,email:session.user.email,role:session.user.app_metadata?.role||'client',metadata:session.user.user_metadata||{}}:null,
     subscribe:subscribeRealtime,
     saveProfile,
@@ -453,6 +463,16 @@ const form=$('kf');
     removePendingObject:async(path)=>{await request('/storage/v1/object/kds-job-files',{method:'DELETE',body:JSON.stringify({prefixes:[path]})});},
     sign:async(path)=>{const result=await request('/storage/v1/object/sign/kds-job-files/'+path.split('/').map(encodeURIComponent).join('/'),{method:'POST',body:JSON.stringify({expiresIn:300})});const value=result.signedURL||result.signedUrl;if(!value)throw Error('A file link could not be created.');return value.startsWith('https://')?value:cfg.supabaseUrl.replace(/\/$/,'')+'/storage/v1'+value;}
   };
+  if(isAdmin){
+    const refreshDashboard=()=>{
+      if(session?.user&&!document.hidden&&!writes&&!loading&&document.documentElement.dataset.authState==='ready'){
+        refresh().catch(()=>{});window.loadActivity?.();
+      }
+    };
+    const dashboardTimer=setInterval(refreshDashboard,30000);
+    document.addEventListener('visibilitychange',refreshDashboard);
+    addEventListener('pagehide',()=>clearInterval(dashboardTimer),{once:true});
+  }
   KDS.retrySession=restore;
   const refreshTimer=setInterval(async()=>{if(!session?.refresh_token||writes||document.hidden||restoring)return;try{session=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:session.refresh_token})},false);await validateSession();await refresh();}catch(e){if(e.status===400||e.status===401||e.status===403){session=null;sessionStorage.removeItem(sessionKey);if(isAdmin){$('app').classList.remove('on');$('lock').classList.remove('gone');}else{$('dash').classList.remove('on');$('auth').classList.remove('gone');}authState('login');authError('Your session expired. Please sign in again.');}else notify('Connection interrupted. Your workspace has not been refreshed.');}},5*60*1000);
   addEventListener('pagehide',()=>clearInterval(refreshTimer),{once:true});

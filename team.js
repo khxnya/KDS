@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id),labels={assigned:'Assigned',working:'In 
 let api=null,identity=null,jobs=[],members=[],selected=null,clientVersion=0,recentUpdates=[],recentActivityError='',developerProfile=null;
 function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
 function button(text,action,cls='btn gh sm'){const e=node('button',cls,text);e.type='button';e.onclick=action;return e;}
-function date(value){if(!value)return 'No due date';const d=new Date(value);return Number.isNaN(d.getTime())?'Date not set':d.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'});}
+function date(value){if(!value)return 'No due date';const d=new Date(value);return Number.isNaN(d.getTime())?'Date not set':d.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Johannesburg'});}
 function status(target,message,kind='info'){if(!target)return;target.textContent=message;target.dataset.kind=kind;target.setAttribute('role',kind==='error'?'alert':'status');}
 function readable(error){if(['PGRST202','PGRST205','42P01'].includes(error.code))return 'Team setup is not installed yet. Ask the owner to run team.sql using the included team guide.';return error.message||'The request could not be completed.';}
 async function list(table,query=''){let result=[],offset=0;for(;;){const batch=await api.request('/rest/v1/'+table+'?select=*&'+query+(query?'&':'')+'limit=200&offset='+offset);result.push(...batch);if(batch.length<200)return result;offset+=200;}}
