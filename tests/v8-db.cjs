@@ -18,6 +18,7 @@ async function run(){const data=await database(accounts,records);try{
  await data.db.exec(fs.readFileSync(path.join(root,'collaboration.sql'),'utf8'));
  await data.db.exec(fs.readFileSync(path.join(root,'production-v8.sql'),'utf8'));
  await data.db.exec(fs.readFileSync(path.join(root,'production-v8.sql'),'utf8'));
+ await data.db.exec(fs.readFileSync(path.join(root,'launch.sql'),'utf8'));
  const owner=actor(accounts.owner,'aal2'),client=actor(accounts.client),other=actor(accounts.other);
  await data.as(owner,"select kds_register_developer($1,'Sipho','website')",[accounts.developer.email]);accounts.developer.app_metadata.role='developer';
  const job=(await data.as(owner,"select kds_assign_job('project-client',$1,'Client build','Private brief',null) id",[accounts.developer.id])).rows[0].id;
@@ -52,6 +53,11 @@ async function run(){const data=await database(accounts,records);try{
  await data.db.query("select kds_record_contact_submission('web3forms:another-request','visitor@example.invalid','Second visitor','website','Another enquiry','{}')");
  assert.equal((await data.as(owner,"select count(*)::int n from kds_records where kind='leads'")).rows[0].n,2);
  assert.equal((await data.as(owner,"select count(*)::int n from kds_notifications where event_key='contact:web3forms:test-request-0001'")).rows[0].n,1);
+ await data.as(owner,"insert into kds_records(id,kind,owner_email,data) values('manual-check','leads',$1,'{}'),('project-check','projects',$1,'{}')",[accounts.client.email]);
+ assert.equal((await data.as(owner,"select payload->>'submission_id' id from kds_notifications where event_key='lead:manual-check'")).rows[0].id,'manual-check');
+ assert.equal((await data.as(client,"select payload->>'record_id' id from kds_notifications where event_key='project:project-check'")).rows[0].id,'project-check');
+ assert.equal((await data.as(other,"select * from kds_notifications where event_key='project:project-check'")).rows.length,0);
+ assert.equal((await data.as(dev,"select payload->>'job_id' id from kds_notifications where kind='Project assignment'")).rows[0].id,job);
  assert.ok(agreement);assert.ok(job);
  console.log('PASS v8 SQL repeatability, profile isolation, project chat receipts, notification RLS, contact rate limits/events and MFA owner actions');
  }finally{await data.close();}}

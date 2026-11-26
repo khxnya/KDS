@@ -17,12 +17,90 @@
   async function request(path,options){if(!api())throw Error('Sign in to continue.');return api().request(path,options);}
   async function rpc(name,body={}){return request('/rest/v1/rpc/'+name,{method:'POST',body:JSON.stringify(body)});}
   function unwrap(value){return Array.isArray(value)&&value.length===1?value[0]:value;}
-  function safeLink(raw){if(!raw||raw==='#')return null;try{const url=new URL(raw,location.href);if(url.origin!==location.origin)return null;if(!/\.(?:html)?$/i.test(url.pathname)&&url.pathname!==location.pathname)return null;return url;}catch(_){return null;}}
   function bellSvg(){return '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>';}
 
   /* Notifications */
   const profileState={profile:null,error:''};
   const notificationState={rows:[],loading:false,error:'',open:false};
+  const seenNotifications = new Set();
+  let soundReady = false;
+  let audio = null;
+  let fetchSequence = 0;
+  const soundKey = () => 'kds.sound.' + identity()?.id;
+  function soundEnabled(){
+    try{return localStorage.getItem(soundKey()) !== 'off';}catch{return true;}
+  }
+  function unlockSound(){
+    if(!identity() || !soundEnabled() || !window.AudioContext)return;
+    try{audio ||= new AudioContext();if(audio.state==='suspended')audio.resume().catch(()=>{});}catch{}
+  }
+  document.addEventListener('pointerdown',unlockSound);
+  document.addEventListener('keydown',unlockSound);
+  function ring(index){
+    if(audio?.state!=='running'||!soundEnabled())return;
+    const start=audio.currentTime+.18*index, tone=audio.createOscillator(), gain=audio.createGain();
+    tone.frequency.value=740;gain.gain.setValueAtTime(.001,start);
+    gain.gain.exponentialRampToValueAtTime(.08,start+.012);
+    gain.gain.exponentialRampToValueAtTime(.001,start+.14);
+    tone.connect(gain);gain.connect(audio.destination);tone.start(start);tone.stop(start+.15);
+    tone.onended=()=>{tone.disconnect();gain.disconnect();};
+  }
+  function observeNotifications(){
+    let index=0;
+    for(const item of visibleNotifications()){
+      if(soundReady&&!seenNotifications.has(item.id)&&!item.read_at)ring(index++);
+      seenNotifications.add(item.id);
+    }
+    soundReady=true;
+  }
+  function notificationDestination(item){
+    const p=item.payload||{};
+    if(p.submission_id&&portal()==='admin')return ['lead',p.submission_id];
+    if(p.message_id)return ['message',p.message_id];
+    if(p.job_id)return ['job',p.job_id];
+    if(p.update_id)return ['checkpoint',p.update_id];
+    if(p.agreement_id)return ['agreement',p.agreement_id];
+    if(p.record_id)return ['project',p.record_id];
+    return null;
+  }
+  function recordDialog(title,body){
+    let dialog=$('kdsRecordDialog');
+    if(!dialog){dialog=el('dialog','kds8-record');dialog.id='kdsRecordDialog';dialog.setAttribute('aria-labelledby','kdsRecordTitle');document.body.append(dialog);}
+    const heading=el('h2','',title);heading.id='kdsRecordTitle';
+    dialog.replaceChildren(heading,el('p','',body),button('Close','btn',()=>KDS.modalClose(dialog)));
+    if(!dialog.open)KDS.modalOpen(dialog);
+  }
+  async function openNotification(item){
+    const dest=notificationDestination(item);
+    if(!dest)return;
+    const [kind,id]=dest;
+    closeQuick(false);
+    if($('kdsNotificationCentre')?.open)await KDS.modalClose($('kdsNotificationCentre'));
+    const specs={
+      lead:['kds_records','id,data','&kind=eq.leads'],
+      project:['kds_records','id,data','&kind=eq.projects'],
+      message:['kds_project_messages','sender_name,body,created_at',''],
+      job:['kds_jobs','title,brief,status',''],
+      checkpoint:['kds_job_updates','checkpoint,summary,created_at',''],
+      agreement:['kds_agreements','title,status,completed_at','']
+    };
+    const [table,fields,extra]=specs[kind];
+    try{
+      const rows=await request('/rest/v1/'+table+'?select='+fields+'&id=eq.'+encodeURIComponent(id)+extra+'&limit=1');
+      if(!rows?.length){recordDialog('Record unavailable','This record was removed or you no longer have access.');return;}
+      const r=rows[0];
+      if(kind==='lead'){await api().refresh();window.show('leads');window.openLead(id);}
+      else if(kind==='job'&&portal()==='developer'&&window.KDSTeam){history.replaceState(null,'','#job/'+encodeURIComponent(id));await window.KDSTeam.reload();}
+      else if(kind==='project'&&$('projectPicker')&&Array.from($('projectPicker').options).some(o=>o.value===id)){
+        $('projectPicker').value=id;$('projectPicker').dispatchEvent(new Event('change'));window.clientView?.('overview');
+      }else{
+        recordDialog(r.title||r.checkpoint||r.sender_name||r.data?.name||item.kind,
+          [r.body||r.summary||r.brief||r.data?.client,r.status,fmt(r.completed_at||r.created_at)].filter(Boolean).join(' · '));
+      }
+      const url=new URL(location.href);url.searchParams.set('activity',item.id);history.replaceState(null,'',url);
+      if(!item.read_at)await markOne(item.id);
+    }catch{recordDialog('Could not open record','Check your connection and try again.');}
+  }
   function notificationCategory(item){const kind=String(item?.kind||'').toLowerCase();if(/message|chat|conversation/.test(kind))return'messages';if(/assign|job|developer/.test(kind))return'assignments';if(/agreement|approval|sign/.test(kind))return'agreements';return'projects';}
   function visibleNotifications(){const categories=profileState.profile?.preferences?.notification_categories;return Array.isArray(categories)?notificationState.rows.filter(item=>categories.includes(notificationCategory(item))):notificationState.rows;}
   function removeRevisionSevenNotifications(){
@@ -48,21 +126,49 @@
     if($('kdsNotificationCentre'))return;
     const dialog=el('dialog','kds8-notification-centre');dialog.id='kdsNotificationCentre';dialog.setAttribute('aria-labelledby','kdsCentreTitle');
     const head=el('header','kds8-centre-head');const copy=el('div');copy.append(el('span','kds8-kicker','WORKSPACE ACTIVITY'),el('h2','', 'Notification centre'));copy.querySelector('h2').id='kdsCentreTitle';
-    const actions=el('div','kds8-centre-actions');actions.append(button('Mark all read','kds8-text-button',markAll),button('Close','kds8-icon-button',()=>KDS.modalClose(dialog)));head.append(copy,actions);
+    const actions=el('div','kds8-centre-actions');actions.append(button('Mark all read','kds8-text-button',markAll),button('Close','kds8-icon-button',()=>KDS.modalClose(dialog)));const toggle=button('', 'kds8-text-button',()=>{
+      const enabled=!soundEnabled();
+      try{localStorage.setItem(soundKey(),enabled?'on':'off');}catch{}
+      syncToggle();if(enabled)unlockSound();
+    });
+    function syncToggle(){toggle.textContent='Sound '+(soundEnabled()?'on':'off');toggle.setAttribute('aria-pressed',String(soundEnabled()));}
+    syncToggle();actions.prepend(toggle);head.append(copy,actions);
     const body=el('div','kds8-centre-body');body.setAttribute('aria-live','polite');dialog.append(head,body);document.body.append(dialog);
   }
   async function fetchNotifications(){
-    notificationState.loading=true;notificationState.error='';renderNotifications();
-    try{notificationState.rows=await request('/rest/v1/kds_notifications?select=id,kind,body,link,created_at,read_at&order=created_at.desc&limit=100')||[];}
-    catch(error){notificationState.error=errorText(error);}finally{notificationState.loading=false;renderNotifications();}
+    const sequence=++fetchSequence;notificationState.loading=!soundReady;notificationState.error='';renderNotifications();
+    try{
+      const rows=[];
+      for(let offset=0;;offset+=100){
+        const batch=await request('/rest/v1/kds_notifications?select=id,kind,body,link,payload,created_at,read_at&order=created_at.desc,id.desc&limit=100&offset='+offset)||[];
+        if(sequence!==fetchSequence)return;
+        rows.push(...batch);if(batch.length<100)break;
+      }
+      if(sequence!==fetchSequence)return;
+      notificationState.rows=rows;observeNotifications();
+    }
+    catch(error){if(sequence===fetchSequence)notificationState.error=errorText(error);}finally{if(sequence===fetchSequence){notificationState.loading=false;renderNotifications();}}
   }
+  async function restoreNotification(){
+    const id=new URL(location.href).searchParams.get('activity');
+    if(!id)return;
+    const item=notificationState.rows.find(row=>row.id===id);
+    if(item&&notificationDestination(item))await openNotification(item);
+    else recordDialog('Record unavailable','This notification is unavailable for your account.');
+  }
+  function clearRecordLink(){
+    const url=new URL(location.href);if(!url.searchParams.has('activity'))return;
+    url.searchParams.delete('activity');history.replaceState(null,'',url);
+  }
+  document.addEventListener('close',event=>{if(event.target.id==='kdsRecordDialog')clearRecordLink();},true);
+  document.addEventListener('click',event=>{if(event.target.closest('#nav a,#drawer .mv,#dscrim'))clearRecordLink();});
   function notificationRow(item,compact=false){
     const row=el('article','kds8-notification'+(item.read_at?'':' is-unread'));row.dataset.id=item.id;
     const dot=el('span','kds8-unread-dot');dot.setAttribute('aria-label',item.read_at?'Read':'Unread');
     const copy=el('div','kds8-notification-copy');copy.append(el('b','',item.kind||'Workspace update'),el('p','',item.body||'An update is available.'));
     const time=el('time','',fmt(item.created_at));if(item.created_at)time.dateTime=item.created_at;copy.append(time);row.append(dot,copy);
     const actions=el('div','kds8-notification-actions');
-    const target=safeLink(item.link);if(target)actions.append(button('Open','kds8-row-action',async()=>{if(!item.read_at)await markOne(item.id);location.assign(target.href);}));
+    if(notificationDestination(item))actions.append(button('Open','kds8-row-action',()=>openNotification(item)));
     if(!item.read_at)actions.append(button(compact?'Read':'Mark read','kds8-row-action',()=>markOne(item.id)));
     row.append(actions);return row;
   }
@@ -88,8 +194,8 @@
   }
   function closeQuick(returnFocus=false){const panel=$('kdsQuickNotifications'),bell=$('kdsBellV8');if(!panel||panel.hidden)return;notificationState.open=false;bell?.setAttribute('aria-expanded','false');bell?.classList.remove('is-active');panel.classList.remove('is-open');setTimeout(()=>{if(!notificationState.open)panel.hidden=true;},reduced()?0:220);if(returnFocus)bell?.focus({preventScroll:true});}
   async function openFull(){closeQuick(false);await fetchNotifications();const dialog=$('kdsNotificationCentre');if(dialog)KDS.modalOpen(dialog);}
-  async function markOne(id){try{await rpc('kds_mark_notifications_read',{p_ids:[id]});const item=notificationState.rows.find(row=>row.id===id);if(item)item.read_at=new Date().toISOString();renderNotifications();}catch(error){announce(errorText(error));}}
-  async function markAll(){try{await rpc('kds_mark_notifications_read',{p_ids:null});notificationState.rows.forEach(row=>row.read_at=row.read_at||new Date().toISOString());renderNotifications();}catch(error){announce(errorText(error));}}
+  async function markOne(id){try{await rpc('kds_mark_notifications_read',{p_ids:[id]});++fetchSequence;notificationState.loading=false;const item=notificationState.rows.find(row=>row.id===id);if(item)item.read_at=new Date().toISOString();renderNotifications();}catch(error){announce(errorText(error));}}
+  async function markAll(){try{await rpc('kds_mark_notifications_read',{p_ids:null});++fetchSequence;notificationState.loading=false;notificationState.rows.forEach(row=>row.read_at=row.read_at||new Date().toISOString());renderNotifications();}catch(error){announce(errorText(error));}}
 
   /* Persisted role settings */
   function profileFallback(){const metadata=identity()?.metadata||{};return{first_name:String(metadata.first_name||metadata.name||'').trim().split(/\s+/)[0]||'',surname:String(metadata.surname||'').trim(),phone:String(metadata.phone||''),business_name:'',project_contact:'',skills:[],availability:'',preferences:{}};}
@@ -183,10 +289,10 @@
   }
   function observeGreetings(){removeDuplicateGreetings();if(portal()!=='developer')return;const observer=new MutationObserver(removeDuplicateGreetings);observer.observe(document.querySelector('.dev-shell')||document.body,{childList:true,subtree:true});setTimeout(()=>observer.disconnect(),10000);}
   function ownerAvatar(){
-    if(portal()!=='admin')return;const avatar=document.querySelector('.a-user .a-av');if(avatar){avatar.textContent='RR';avatar.setAttribute('aria-label','Ray Ro');}
+    if(portal()!=='admin')return;const avatar=document.querySelector('.a-user .a-av');if(avatar){avatar.replaceChildren(Object.assign(document.createElement('img'),{src:'favicon.svg',alt:'KD Interlock'}));avatar.setAttribute('aria-label','Khanya Ngema');}
   }
   async function ready(){
-    if(portal()==='public'||!api()?.identity?.())return;removeRevisionSevenNotifications();removeRevisionSevenChat();await loadProfile();installBell();installAdminCommunity();if(portal()==='admin'&&location.hash==='#community')window.show?.('community');installRoleChat();mountProfileSettings();observeGreetings();ownerAvatar();await fetchNotifications();if(portal()==='admin')await loadCommunity();subscribeOrPoll();
+    if(portal()==='public'||!api()?.identity?.())return;removeRevisionSevenNotifications();removeRevisionSevenChat();await loadProfile();installBell();installAdminCommunity();if(portal()==='admin'&&location.hash==='#community')window.show?.('community');installRoleChat();mountProfileSettings();observeGreetings();ownerAvatar();await fetchNotifications();if(portal()==='admin')await loadCommunity();await restoreNotification();subscribeOrPoll();
   }
   document.addEventListener('pointerdown',event=>{const panel=$('kdsQuickNotifications'),bell=$('kdsBellV8');if(notificationState.open&&panel&&!panel.contains(event.target)&&!bell?.contains(event.target))closeQuick(false);});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&notificationState.open){event.preventDefault();closeQuick(true);}});

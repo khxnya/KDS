@@ -11,7 +11,7 @@ function makeApi(calls, accountRole = 'admin') {
     identity: () => ({ id: accountRole + '-1', role: accountRole, metadata: { first_name: accountRole === 'developer' ? 'Sipho' : accountRole === 'client' ? 'Lerato' : 'Khanya', surname: 'Ngema' } }),
     async updateProfile(data) { calls.push({ type: 'updateProfile', data }); return { id: 'owner-1', user_metadata: data }; },
     subscribe(table, filter, callback) {
-      calls.push({ type: 'subscribe', table, filter });
+      calls.push({ type: 'subscribe', table, filter, callback });
       return () => calls.push({ type: 'unsubscribe', table });
     },
     async request(pathname, options = {}) {
@@ -89,7 +89,7 @@ async function run() {
   assert.match(document.getElementById('v-community').textContent, /Community Chat/);
   assert.ok(document.getElementById('kdsBellV8'), 'notification bell is installed');
   assert.equal(document.querySelector('.kds8-bell-count').textContent, '1');
-  assert.equal(document.querySelector('.a-av').getAttribute('aria-label'), 'Ray Ro');
+  assert.equal(document.querySelector('.a-av').getAttribute('aria-label'), 'Khanya Ngema');
   const settings = document.querySelector('#kdsProfileSettingsV8 form');
   assert.ok(settings, 'persisted owner profile settings are mounted');
   settings.elements.first_name.value = 'Khanya';
@@ -107,6 +107,30 @@ async function run() {
   assert.equal(document.getElementById('kdsBellV8').getAttribute('aria-expanded'), 'true');
   assert.equal(quick.querySelectorAll('.kds8-notification').length, 2);
 
+  let rings=0;
+  const audioParam={setValueAtTime(){},exponentialRampToValueAtTime(){}};
+  window.AudioContext=class{
+    state='running';currentTime=0;
+    createOscillator(){return {frequency:{},connect(){},start(){rings++;},stop(){}};}
+    createGain(){return {gain:audioParam,connect(){}};}
+  };
+  document.body.dispatchEvent(new window.Event('pointerdown',{bubbles:true}));
+  const api=window.KDS.teamApi,original=api.request.bind(api);
+  const fresh={id:'n-3',kind:'New lead',payload:{submission_id:'lead-3'},read_at:null};
+  api.request=async(path,options)=>{
+    if(path.includes('kds_notifications?'))return [fresh,...await original(path,options)];
+    if(path.includes('kds_records?'))return [{id:'lead-3',data:{name:'Fixture lead'}}];
+    if(path.endsWith('kds_mark_notifications_read'))fresh.read_at=new Date().toISOString();
+    return original(path,options);
+  };
+  api.refresh=async()=>{};window.show=()=>{};let opened;window.openLead=id=>opened=id;
+  const refresh=calls.find(c=>c.table==='kds_notifications').callback;
+  refresh();await delay(30);assert.equal(rings,1);
+  refresh();await delay(30);assert.equal(rings,1,'existing events stay silent');
+  quick.querySelector('[data-id="n-3"] button').click();await delay(30);
+  assert.equal(opened,'lead-3');assert.equal(document.querySelector('.kds8-bell-count').textContent,'1');
+  const sound=[...document.querySelectorAll('#kdsNotificationCentre button')].find(b=>b.textContent==='Sound on');
+  sound.click();assert.equal(window.localStorage.getItem('kds.sound.admin-1'),'off');
   const community = document.querySelector('#nav [data-v="community"]');
   community.click();
   await delay(30);

@@ -137,10 +137,6 @@ Upload the complete contents of `dist/` together so HTML and JavaScript revision
 
 Local tests use fixtures and do not touch production. Live Auth email, MFA, contact delivery, Realtime connectivity, Storage, RLS isolation and signing-provider behaviour still require staging and production validation with real configuration.
 
-## Contact, assignment and Microsoft rollout
+## Launch rollout
 
-1. Apply `workflow.sql` after `production-v8.sql` and before deploying the frontend. This imports existing accepted enquiries and creates future leads in the same transaction as each submission. Deploy the updated `contact-submit` function with public invocation enabled. Set the exact site origin and a private rate-limit salt. Enquiries are delivered directly to the studio lead list.
-2. Register a Microsoft application that supports the account type used by the owner. For a personal Microsoft account registered under a Gmail address, enable personal Microsoft accounts. Register the Supabase Auth callback as a Web redirect URI. Configure Microsoft's optional verified-domain claim `xms_edov`, then configure the Azure provider, client ID and secret in Supabase. Allow the site's exact HTTPS `admin.html` callback URL.
-3. Have the owner complete Microsoft sign-in for `khanyangema5@gmail.com`. In the trusted Supabase administration interface, verify the confirmed user UUID and Azure identity before assigning the server-managed admin role. Complete the existing TOTP challenge and test sign-out, a fresh sign-in, an unauthorized account, and account recovery.
-4. Keep the password credential in KeePassXC until the owner verifies both Microsoft access and recovery. Schedule retirement of the legacy admin password separately. Client and developer accounts also use password authentication.
-5. Static hosting serves the login page and workspace HTML shell publicly. Supabase role and MFA policies govern protected records. If the HTML itself must require authentication, configure a server-side session gateway at the hosting origin before rollout.
+Apply workflow.sql, then launch.sql. Deploy the contact-submit function and the built dist directory. Set KDS_ALLOWED_ORIGIN to the final HTTPS origin. In Supabase Auth configure Site URL and allow the deployed client.html recovery redirect. Verify password sign-in, admin TOTP, reset emails, notification delivery and contact submissions on that origin. Store account passwords in KeePassXC.

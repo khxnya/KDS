@@ -150,7 +150,9 @@
     const questions = $('.cw-q', panel);
     if (title) title.textContent = 'RAY';
     if (status) status.textContent = 'Khanya Digital studio guide';
-    if (avatar) avatar.textContent = 'R';
+    const rayImage = () => Object.assign(document.createElement('img'), {src:'ray.webp',alt:'',className:'ray-avatar'});
+    fab.replaceChildren(rayImage());
+    if (avatar) avatar.replaceChildren(rayImage());
     if (close) {
       close.setAttribute('aria-label', 'Close RAY');
       close.setAttribute('title', 'Close RAY');

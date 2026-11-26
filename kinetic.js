@@ -371,19 +371,6 @@ const form=$('kf');
   async function signIn(email,password){session=null;memory={};sessionStorage.removeItem(sessionKey);const data=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})},false);session=data;const user=await request('/auth/v1/user');if(String(user.email||'').toLowerCase()!==email.toLowerCase())throw Error('Sign-in could not be completed for this account.');await enter();}
   let signing=false;
   async function login(){if(signing)return;const email=$(isAdmin?'lkEmail':'liEmail').value.trim().toLowerCase(),password=$(isAdmin?'lkPass':'liPass').value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!password)return authError('Enter your email and password.');signing=true;authError('Signing in…','loading');const button=document.querySelector(isAdmin?'#lock button[onclick*=unlock]':'#p-in button[onclick*=login]');if(button){button.disabled=true;button.setAttribute('aria-busy','true');}try{await signIn(email,password);authError('');$(isAdmin?'lkPass':'liPass').value='';}catch(e){session=null;sessionStorage.removeItem(sessionKey);authState('login');authError(e.message);if(isAdmin){$('app').classList.remove('on');$('lock').classList.remove('gone');}else{$('dash').classList.remove('on');$('auth').classList.remove('gone');}}finally{signing=false;if(button){button.disabled=false;button.removeAttribute('aria-busy');}}}
-  if(isAdmin){
-    $('microsoftLogin').onclick=async()=>{
-      try{
-        const verifier=Array.from(crypto.getRandomValues(new Uint8Array(32)),n=>n.toString(16).padStart(2,'0')).join('');
-        const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
-        const challenge=btoa(String.fromCharCode(...new Uint8Array(digest))).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
-        sessionStorage.setItem('kds_ms_verifier',verifier);
-        const url=new URL('/auth/v1/authorize',cfg.supabaseUrl);
-        url.search=new URLSearchParams({provider:'azure',scopes:'email',redirect_to:location.origin+location.pathname,code_challenge:challenge,code_challenge_method:'s256',login_hint:'khanyangema5@gmail.com'});
-        location.assign(url);
-      }catch(e){authError('Microsoft sign-in could not start. '+e.message);}
-    };
-  }
   window.unlock=login;window.login=login;window.devLogin=()=>location.href='admin.html';
   async function logout(){const active=session;session=null;sessionStorage.removeItem(sessionKey);if(active?.user?.id)sessionStorage.removeItem('kds_client_project_'+active.user.id);memory={};if(isAdmin){$('app').classList.remove('on');$('lock').classList.remove('gone');}else{$('dash').classList.remove('on');$('auth').classList.remove('gone');}authState('login');try{if(active?.access_token)await fetch(cfg.supabaseUrl.replace(/\/$/,'')+'/auth/v1/logout',{method:'POST',headers:{apikey:cfg.supabaseAnonKey,Authorization:'Bearer '+active.access_token},signal:AbortSignal.timeout(15000)});}catch(_){}location.replace(location.pathname);}
   window.logout=logout;window.lockUp=logout;
@@ -421,19 +408,6 @@ const form=$('kf');
         sessionStorage.removeItem(sessionKey);session={access_token:fragment.get('access_token'),refresh_token:fragment.get('refresh_token')};history.replaceState(null,'',location.pathname+'#recovery');
         session.user=await request('/auth/v1/user');const back=$('recoveryPanel')?.querySelector('a');if(back)back.href=session.user.app_metadata?.role==='developer'?'developer.html':session.user.app_metadata?.role==='admin'?'admin.html':'client.html';authState('recovery');const form=$('recoveryForm');if(!form)throw Error('Open the password recovery link on client.html.');
         form.onsubmit=async event=>{event.preventDefault();const password=$('recoveryPassword').value,confirm=$('recoveryConfirm').value;if(password.length<12||password!==confirm){$('recoveryStatus').textContent='Use at least 12 characters and enter the same password twice.';return;}const submit=form.querySelector('button[type=submit]');submit.disabled=true;try{await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({password})});$('recoveryStatus').textContent='Password updated. Return to Login to continue.';try{await request('/auth/v1/logout',{method:'POST'});}catch(_){}session=null;form.reset();}catch(e){$('recoveryStatus').textContent=e.message;}finally{submit.disabled=false;}};return;
-      }
-      const code=new URLSearchParams(location.search).get('code');
-      if(isAdmin&&code){
-        const verifier=sessionStorage.getItem('kds_ms_verifier');
-        sessionStorage.removeItem('kds_ms_verifier');
-        history.replaceState(null,'',location.pathname);
-        if(!verifier)throw Error('Microsoft verification expired. Start sign-in again.');
-        session=await request('/auth/v1/token?grant_type=pkce',{method:'POST',body:JSON.stringify({auth_code:code,code_verifier:verifier})},false);
-        const user=await request('/auth/v1/user');
-        if(!user.email_confirmed_at||user.email?.toLowerCase()!=='khanyangema5@gmail.com'||!user.identities?.some(i=>i.provider==='azure')){
-          session=null;throw Error('Microsoft account verification failed.');
-        }
-        await enter();return;
       }
       let saved=null;try{saved=JSON.parse(sessionStorage.getItem(sessionKey)||'null');}catch(_){sessionStorage.removeItem(sessionKey);}
       if(!saved?.refresh_token){authState('login');return;}

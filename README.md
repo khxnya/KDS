@@ -84,12 +84,11 @@ Edit config.js:
 window.KDS_CONFIG = {
   supabaseUrl: 'https://YOUR_PROJECT_REF.supabase.co',
   supabaseAnonKey: 'YOUR_PUBLIC_PUBLISHABLE_OR_ANON_KEY',
-  enquiryEndpoint: 'https://YOUR_SERVER/enquiry',
-  web3FormsAccessKey: 'YOUR_WEB3FORMS_ACCESS_KEY'
+  enquiryEndpoint: 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/contact-submit'
 };
 ```
 
-For production revision 8, set `enquiryEndpoint` to the deployed Supabase `contact-submit` Edge Function and leave `web3FormsAccessKey` empty. Keep the Web3Forms key in Supabase Function secrets so accepted enquiries can be recorded and notify the owner. Direct browser Web3Forms submission remains a limited fallback when no endpoint is configured; restrict any browser key to the live domain. It cannot create a trusted database notification. A renamed Supabase display name does not change its project reference URL.
+Deploy the contact-submit function to the same project as the database. Set the exact HTTPS site origin in its KDS_ALLOWED_ORIGIN secret.
 
 Only the publishable/anon key is suitable for the browser. Never put secret/service_role keys in JavaScript. The runtime and setup helper reject recognised service-role/secret-key forms; that check is not a substitute for RLS. Public configuration is intentionally public. Server mail-provider credentials and service-role keys belong exclusively in your backend environment.
 
@@ -227,7 +226,7 @@ The current form offers Website design/development, 3D animation/visual content 
 
 The configured `enquiryEndpoint` accepts JSON with an `Idempotency-Key` header and returns HTTP 2xx plus `{"success":true}` only after the delivery provider accepts the message and the backend records that result. Failed submission retains the enquiry text and duplicate clicks are suppressed.
 
-The shipped `contact-submit` Edge Function uses a server-held Web3Forms key, exact-origin CORS, validation, a honeypot, request idempotency and database rate limiting. It records a contact submission and produces the owner notification only after provider acceptance. The displayed contact address is `khanyaszn@gmail.com`. Do not put the Supabase service key or backend delivery key in this project. Direct browser Web3Forms remains a fallback when no endpoint exists, but it cannot create a trusted owner notification. This build can verify request and database behaviour locally; it cannot verify your Web3Forms account, allowed domain or inbox. Submit a real enquiry from the deployed domain before claiming delivery is live.
+The public form saves contact submissions through the rate-limited Edge Function. Database triggers create the lead and notify its owner. Verify a real enquiry from the deployed domain.
 
 ## Media and Work page
 

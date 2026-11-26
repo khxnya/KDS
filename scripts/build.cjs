@@ -11,6 +11,7 @@ const applicationFiles = [
   'client.html',
   'developer.html',
   'favicon.svg',
+  'ray.webp',
   'team.js',
   'kinetic.js',
   'v6.js',
@@ -37,6 +38,7 @@ const releaseFiles = [
   'collaboration.sql',
   'production-v8.sql',
   'workflow.sql',
+  'launch.sql',
   'setup.html',
   'package.json',
   'package-lock.json'
