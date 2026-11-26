@@ -282,7 +282,13 @@
   function removeDuplicateGreetings(){
     const me=identity(),metadata=me?.metadata||{},first=String(profileState.profile?.first_name||metadata.first_name||metadata.name||'').trim().split(/\s+/)[0];
     if(portal()==='developer'){
-      const head=document.querySelector('.dev-header h1');if(head&&!head.dataset.greetingFixed){head.replaceChildren(document.createTextNode(first?'Hello, ': 'Hello.'));if(first)head.append(el('span','',first+'.'));head.dataset.greetingFixed='true';}
+      const head=document.querySelector('.dev-header h1');
+      if(head&&!head.dataset.greetingFixed){
+        const name=$('developerName')||el('span');
+        name.id='developerName';name.textContent=first||name.textContent||'colleague';
+        head.replaceChildren(document.createTextNode('Hello, '),name,document.createTextNode('.'));
+        head.dataset.greetingFixed='true';
+      }
       const secondary=$('developerWelcomeTitle');if(secondary&&secondary.textContent!=='Your assigned work')secondary.textContent='Your assigned work';
     }
     if(portal()==='client'&&$('greet')&&!$('greet').dataset.greetingFixed){$('greet').replaceChildren(document.createTextNode(first?'Hello, ':'Hello.'));if(first)$('greet').append(el('em','',first+'.'));$('greet').dataset.greetingFixed='true';}
